@@ -28,7 +28,7 @@ fn home(ctx: web.Context) -> Response {
       html.div(
         [attribute.class("flex gap-2")],
         entity.get_all_entities()
-          |> list.map(fn(entity) { ui.entity_link(entity, False, False) }),
+          |> list.map(fn(entity) { ui.entity_link(entity, ui.None, False) }),
       ),
       html.div([attribute.id("details")], [
         html.p([], [html.text("Select a character")]),
@@ -45,7 +45,11 @@ fn detail(ctx: web.Context, id: String) -> Response {
     Ok(entity) ->
       element.fragment([
         ui.entity_detail(entity),
-        ui.entity_link(entity, True, True),
+        ui.entity_link(entity, ui.Selected, True),
+        ..entity.get_entity_links(id)
+        |> list.map(fn(linked_entity) {
+          ui.entity_link(linked_entity, ui.Highlighted, True)
+        })
       ])
       |> element.to_string_builder
       |> wisp.html_response(200)

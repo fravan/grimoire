@@ -20,16 +20,26 @@ pub fn layout(elements: List(Element(a))) {
   ])
 }
 
-pub fn entity_link(entity: entity.Entity, highlight: Bool, oob: Bool) {
+pub type EntityLinkState {
+  None
+  Highlighted
+  Selected
+}
+
+pub fn entity_link(
+  entity: entity.Entity,
+  highlight_state: EntityLinkState,
+  oob: Bool,
+) {
   html.a(
     [
       lustre_hx.target(lustre_hx.CssSelector("#details")),
       attribute.id("entity_link_" <> entity.id),
       attribute.href("/" <> entity.id),
-      attribute.class("entity_link p-2 rounded hover:bg-gray-300"),
+      attribute.class("entity-link p-2 rounded hover:bg-gray-300"),
       attribute.classes([
-        #("bg-gray-200", !highlight),
-        #("bg-orange-200", highlight),
+        #("highlighted", highlight_state == Highlighted),
+        #("selected", highlight_state == Selected),
       ]),
     ]
       |> with_oob_swap(oob),

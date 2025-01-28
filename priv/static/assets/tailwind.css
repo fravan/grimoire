@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+@layer components {
+    .entity-link {
+        background-color: var(--color-gray-200);
+        &.selected {
+            background-color: var(--color-orange-200);
+        }
+        &.highlighted {
+            background-color: var(--color-indigo-200);
+        }
+    }
+}
