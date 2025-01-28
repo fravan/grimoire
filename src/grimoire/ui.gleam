@@ -1,9 +1,8 @@
-import gleam/option
 import grimoire/entity
+import grimoire/htmx
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
-import lustre/internals/vdom
 import lustre_hx
 
 pub fn layout(elements: List(Element(a))) {
@@ -42,7 +41,7 @@ pub fn entity_link(
         #("selected", highlight_state == Selected),
       ]),
     ]
-      |> with_oob_swap(oob),
+      |> htmx.with_oob_swap(oob),
     [html.text(entity.name)],
   )
 }
@@ -52,14 +51,4 @@ pub fn entity_detail(entity: entity.Entity) {
     html.h1([], [html.text(entity.name)]),
     html.p([], [html.text(entity.description)]),
   ])
-}
-
-fn with_oob_swap(
-  attributes: List(vdom.Attribute(b)),
-  swap: Bool,
-) -> List(vdom.Attribute(b)) {
-  case swap {
-    True -> [attribute.attribute("hx-swap-oob", "true"), ..attributes]
-    False -> attributes
-  }
 }
