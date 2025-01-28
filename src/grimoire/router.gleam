@@ -1,3 +1,5 @@
+import gleam/list
+import grimoire/entity
 import grimoire/ui
 import grimoire/web
 import lustre/attribute
@@ -15,7 +17,7 @@ pub fn handle_request(req: Request, ctx: web.Context) -> Response {
 
   case wisp.path_segments(req) {
     [] -> home(ctx)
-    [name] -> detail(ctx, name)
+    [id] -> detail(ctx, id)
     _ -> wisp.not_found()
   }
 }
@@ -23,11 +25,11 @@ pub fn handle_request(req: Request, ctx: web.Context) -> Response {
 fn home(ctx: web.Context) -> Response {
   ui.layout([
     html.div([attribute.class("flex flex-row gap-2")], [
-      html.div([attribute.class("flex gap-2")], [
-        ui.entity_link("Link", False, False),
-        ui.entity_link("Zelda", False, False),
-        ui.entity_link("Sanderson", False, False),
-      ]),
+      html.div(
+        [attribute.class("flex gap-2")],
+        entity.get_all_entities()
+          |> list.map(fn(entity) { ui.entity_link(entity, False, False) }),
+      ),
       html.div([attribute.id("details")], [
         html.p([], [html.text("Select a character")]),
       ]),
@@ -37,12 +39,17 @@ fn home(ctx: web.Context) -> Response {
   |> wisp.html_response(200)
 }
 
-fn detail(ctx: web.Context, name: String) -> Response {
+fn detail(ctx: web.Context, id: String) -> Response {
   // TODO: Add a match on wether this is a HX boosted request or not
-  element.fragment([
-    ui.entity_detail(name, "This is " <> name <> " page"),
-    ui.entity_link(name, True, True),
-  ])
-  |> element.to_string_builder
-  |> wisp.html_response(200)
+  case entity.get_entity_by_id(id) {
+    Ok(entity) ->
+      element.fragment([
+        ui.entity_detail(entity),
+        ui.entity_link(entity, True, True),
+      ])
+      |> element.to_string_builder
+      |> wisp.html_response(200)
+      |> wisp.set_header("HX-Trigger", "clear-selection")
+    _ -> wisp.response(404)
+  }
 }
