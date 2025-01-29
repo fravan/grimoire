@@ -2,6 +2,7 @@ import envoy
 import gleam/erlang/process
 import gleam/int
 import gleam/result
+import grimoire/database
 import grimoire/router
 import grimoire/web
 import mist
@@ -9,7 +10,7 @@ import radiate
 import wisp
 import wisp/wisp_mist
 
-// const db_name = "grimoire.sqlite3"
+const db_name = "grimoire.sqlite3"
 
 pub fn main() {
   let _ =
@@ -22,11 +23,11 @@ pub fn main() {
   let port = load_port()
   let secret_key_base = load_application_secret()
   let assert Ok(priv) = wisp.priv_directory("grimoire")
-  // let assert Ok(_) = database.with_connection(db_name, database.migrate_schema)
+  let assert Ok(_) = database.with_connection(db_name, database.migrate_schema)
 
   let handle_request = fn(req) {
-    // use db <- database.with_connection(db_name)
-    let ctx = web.Context(user_id: 0, static_path: priv <> "/static")
+    use db <- database.with_connection(db_name)
+    let ctx = web.Context(db:, static_path: priv <> "/static")
     router.handle_request(req, ctx)
   }
 

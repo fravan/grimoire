@@ -20,23 +20,30 @@ pub fn handle_request(req: Request, ctx: web.Context) -> Response {
   use <- wisp.serve_static(req, under: "/", from: ctx.static_path)
 
   case wisp.path_segments(req) {
-    [] -> home(option.None)
+    [] -> home(ctx, option.None)
     [id] -> detail(req, ctx, id)
     _ -> wisp.not_found()
   }
 }
 
-fn home(selected_entity: option.Option(entity.Entity)) -> Response {
+fn home(
+  ctx: web.Context,
+  selected_entity: option.Option(entity.Entity),
+) -> Response {
+  let links = case selected_entity {
+    option.Some(x) -> entity.get_entity_links(ctx.db, x.id)
+    _ -> dict.new()
+  }
   ui.layout([
     html.div([attribute.class("flex flex-row gap-2")], [
       html.div(
         [attribute.class("flex gap-2")],
-        entity.get_all_entities()
+        entity.get_all_entities(ctx.db)
           |> list.map(fn(entity) {
             let highlight_state = case selected_entity {
               option.Some(x) if x.id == entity.id -> ui.Selected
-              option.Some(x) ->
-                case dict.has_key(x.links, entity.id) {
+              option.Some(_) ->
+                case dict.has_key(links, entity.id) {
                   True -> ui.Highlighted
                   False -> ui.None
                 }
@@ -57,23 +64,28 @@ fn home(selected_entity: option.Option(entity.Entity)) -> Response {
   |> wisp.html_response(200)
 }
 
-fn detail(req: Request, _ctx: web.Context, id: String) -> Response {
-  htmx.handle_request(req, boosted: fn(_) { boosted_details(id) }, basic: fn(_) {
-    home(entity.get_entity_by_id(id) |> option.from_result)
-  })
+fn detail(req: Request, ctx: web.Context, id: String) -> Response {
+  htmx.handle_request(
+    req,
+    boosted: fn(_) { boosted_details(ctx, id) },
+    basic: fn(_) {
+      home(ctx, entity.get_entity_by_id(ctx.db, id) |> option.from_result)
+    },
+  )
 }
 
-fn boosted_details(id: String) -> Response {
-  case entity.get_entity_by_id(id) {
+fn boosted_details(ctx: web.Context, id: String) -> Response {
+  case entity.get_entity_by_id(ctx.db, id) {
     Ok(entity) ->
       element.fragment([
         ui.entity_detail(entity),
         ui.entity_link(entity, ui.Selected, True),
-        ..entity.links
-        |> dict.map_values(fn(key, _value) { entity.get_entity_by_id(key) })
+        ..entity.get_entity_links(ctx.db, id)
+        |> dict.map_values(fn(_key, value) {
+          let #(entity, _reason) = value
+          entity
+        })
         |> dict.values
-        |> result.all
-        |> result.unwrap([])
         |> list.map(fn(linked_entity) {
           ui.entity_link(linked_entity, ui.Highlighted, True)
         })
