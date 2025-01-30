@@ -1,6 +1,8 @@
 import gleam/dict
 import gleam/list
 import gleam/option
+import gleam/string
+import gleam/string_tree
 import grimoire/entity
 import grimoire/htmx
 import grimoire/ui
@@ -78,7 +80,7 @@ fn boosted_details(ctx: web.Context, id: String) -> Response {
   let all_entities = entity.get_all_entities(ctx.db)
   case entity.get_entity_by_id(ctx.db, id) {
     Ok(entity) ->
-      element.fragment([
+      [
         ui.entity_detail(entity, all_entities),
         ui.entity_link(entity, ui.Selected, True),
         ..entity.get_entity_links(ctx.db, id)
@@ -90,8 +92,9 @@ fn boosted_details(ctx: web.Context, id: String) -> Response {
         |> list.map(fn(linked_entity) {
           ui.entity_link(linked_entity, ui.Highlighted, True)
         })
-      ])
-      |> element.to_string_builder
+      ]
+      |> list.map(element.to_string_builder)
+      |> string_tree.join("")
       |> wisp.html_response(200)
       |> wisp.set_header("HX-Trigger", "clear-selection")
     _ -> wisp.response(404)

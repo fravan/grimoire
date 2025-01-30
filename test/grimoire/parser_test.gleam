@@ -1,7 +1,9 @@
 import gleeunit
 import gleeunit/should
 import grimoire/parser
+import lustre/attribute
 import lustre/element/html
+import lustre_hx
 
 pub fn main() {
   gleeunit.main()
@@ -13,7 +15,7 @@ pub fn simple_paragraph_test() {
 }
 
 pub fn multiple_simple_paragraph_test() {
-  parser.parse("Link is a knight.\nZelda is a princess.")
+  parser.parse("Link is a knight.\n\nZelda is a princess.")
   |> should.equal([
     html.p([], [html.text("Link is a knight.")]),
     html.p([], [html.text("Zelda is a princess.")]),
@@ -21,7 +23,7 @@ pub fn multiple_simple_paragraph_test() {
 }
 
 pub fn multiple_simple_paragraph_return_carriage_test() {
-  parser.parse("Link is a knight.\r\nZelda is a princess.")
+  parser.parse("Link is a knight.\r\n\r\nZelda is a princess.")
   |> should.equal([
     html.p([], [html.text("Link is a knight.")]),
     html.p([], [html.text("Zelda is a princess.")]),
@@ -39,7 +41,7 @@ pub fn simple_h2_test() {
 }
 
 pub fn paragraph_with_headings_test() {
-  parser.parse("# Link, the knight\n## General\nLink is great")
+  parser.parse("# Link, the knight\n\n## General\n\nLink is great")
   |> should.equal([
     html.h1([], [html.text("Link, the knight")]),
     html.h2([], [html.text("General")]),
@@ -50,8 +52,9 @@ pub fn paragraph_with_headings_test() {
 pub fn paragraph_with_whitespace_test() {
   parser.parse(
     "# Link, the knight
-    ## General
-    Link is great",
+## General
+
+Link is great",
   )
   |> should.equal([
     html.h1([], [html.text("Link, the knight")]),
@@ -69,5 +72,26 @@ pub fn ignore_empty_lines_test() {
   |> should.equal([
     html.p([], [html.text("Link is great.")]),
     html.p([], [html.text("So is Zelda.")]),
+  ])
+}
+
+pub fn entity_reference_with_name_test() {
+  parser.parse(
+    "He is [Zelda][dtt]'s knight
+
+    [dtt]: /dtt",
+  )
+  |> should.equal([
+    html.p([], [
+      html.text("He is "),
+      html.a(
+        [
+          lustre_hx.target(lustre_hx.CssSelector("#details")),
+          attribute.href("/dtt"),
+        ],
+        [html.text("Zelda")],
+      ),
+      html.text("'s knight"),
+    ]),
   ])
 }
