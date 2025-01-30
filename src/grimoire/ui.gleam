@@ -1,3 +1,5 @@
+import gleam/list
+import gleam/string_tree
 import grimoire/entity
 import grimoire/htmx
 import lustre/attribute
@@ -46,9 +48,17 @@ pub fn entity_link(
   )
 }
 
-pub fn entity_detail(entity: entity.Entity) {
-  html.div([attribute.class("flex gap-2")], [
-    html.h1([], [html.text(entity.name)]),
-    html.p([], [html.text(entity.description)]),
+pub fn entity_detail(entity: entity.Entity, all_entities: List(entity.Entity)) {
+  let parsed_description = entity.description
+  |> string_tree.from_string
+  let final_description = list.fold(all_entities, from: parsed_description, with: fn(acc, current) {
+    let entity.Entity(id:, name:, ..) = current
+    acc |> string_tree.replace(each: "@@" <> id <> "@@", with: name)
+  })
+  |> string_tree.to_string
+
+  html.div([attribute.class("flex flex-col gap-2 bg-amber-50 p-4")], [
+    html.h1([attribute.class("border-b-4 border-red-200 text-2xl font-bold text-red-800")], [html.text(entity.name)]),
+    html.p([], [html.text(final_description)]),
   ])
 }

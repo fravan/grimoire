@@ -1,7 +1,6 @@
 import gleam/dict
 import gleam/list
 import gleam/option
-import gleam/result
 import grimoire/entity
 import grimoire/htmx
 import grimoire/ui
@@ -30,6 +29,7 @@ fn home(
   ctx: web.Context,
   selected_entity: option.Option(entity.Entity),
 ) -> Response {
+  let all_entities = entity.get_all_entities(ctx.db)
   let links = case selected_entity {
     option.Some(x) -> entity.get_entity_links(ctx.db, x.id)
     _ -> dict.new()
@@ -38,7 +38,7 @@ fn home(
     html.div([attribute.class("flex flex-row gap-2")], [
       html.div(
         [attribute.class("flex gap-2")],
-        entity.get_all_entities(ctx.db)
+        all_entities
           |> list.map(fn(entity) {
             let highlight_state = case selected_entity {
               option.Some(x) if x.id == entity.id -> ui.Selected
@@ -54,7 +54,7 @@ fn home(
       ),
       html.div([attribute.id("details")], [
         case selected_entity {
-          option.Some(x) -> ui.entity_detail(x)
+          option.Some(x) -> ui.entity_detail(x, all_entities)
           _ -> html.p([], [html.text("Select a character")])
         },
       ]),
@@ -75,10 +75,11 @@ fn detail(req: Request, ctx: web.Context, id: String) -> Response {
 }
 
 fn boosted_details(ctx: web.Context, id: String) -> Response {
+  let all_entities = entity.get_all_entities(ctx.db)
   case entity.get_entity_by_id(ctx.db, id) {
     Ok(entity) ->
       element.fragment([
-        ui.entity_detail(entity),
+        ui.entity_detail(entity, all_entities),
         ui.entity_link(entity, ui.Selected, True),
         ..entity.get_entity_links(ctx.db, id)
         |> dict.map_values(fn(_key, value) {
