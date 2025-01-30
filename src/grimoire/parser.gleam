@@ -59,11 +59,11 @@ fn container_to_html(
     }
     jot.Heading(_attrs, level, inlines) -> {
       let heading_element = case level {
-        1 -> html.h1([], inlines_to_html([], inlines, refs))
-        2 -> html.h2([], inlines_to_html([], inlines, refs))
-        3 -> html.h3([], inlines_to_html([], inlines, refs))
-        4 -> html.h4([], inlines_to_html([], inlines, refs))
-        _ -> html.h5([], inlines_to_html([], inlines, refs))
+        1 -> html.h2([], inlines_to_html([], inlines, refs))
+        2 -> html.h3([], inlines_to_html([], inlines, refs))
+        3 -> html.h4([], inlines_to_html([], inlines, refs))
+        4 -> html.h5([], inlines_to_html([], inlines, refs))
+        _ -> html.h6([], inlines_to_html([], inlines, refs))
       }
       [heading_element, ..html]
     }

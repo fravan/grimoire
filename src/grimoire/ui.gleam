@@ -50,13 +50,7 @@ pub fn entity_link(
 }
 
 pub fn entity_detail(entity: entity.Entity, all_entities: List(entity.Entity)) {
-  // let parsed_description = entity.description
-  // |> string_tree.from_string
-  // let final_description = list.fold(all_entities, from: parsed_description, with: fn(acc, current) {
-  //   let entity.Entity(id:, name:, ..) = current
-  //   acc |> string_tree.replace(each: "@@" <> id <> "@@", with: name)
-  // })
-  // |> string_tree.to_string
+  // add all the entities as reference if used in a link in description.
   let final_description =
     list.fold(
       all_entities,
@@ -66,15 +60,8 @@ pub fn entity_detail(entity: entity.Entity, all_entities: List(entity.Entity)) {
       },
     )
 
-  html.div([attribute.class("flex flex-col gap-2 bg-amber-50 p-4")], [
-    html.h1(
-      [
-        attribute.class(
-          "border-b-4 border-red-200 text-2xl font-bold text-red-800",
-        ),
-      ],
-      [html.text(entity.name)],
-    ),
-    html.p([], parser.parse(final_description)),
+  html.div([attribute.class("entity-details")], [
+    html.h1([], [html.text(entity.name)]),
+    ..parser.parse(final_description)
   ])
 }
