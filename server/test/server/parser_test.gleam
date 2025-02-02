@@ -1,6 +1,6 @@
 import gleeunit
 import gleeunit/should
-import grimoire/parser
+import server/parser
 import lustre/attribute
 import lustre/element/html
 import lustre_hx

@@ -1,8 +1,8 @@
 import gleam/dict
 import gleam/dynamic/decode
 import gleam/list
-import grimoire/database
-import grimoire/error
+import server/database
+import server/error
 import sqlight
 
 pub type EntityId =

@@ -1,8 +1,8 @@
 import gleam/list
 import gleam/string_tree
-import grimoire/entity
-import grimoire/htmx
-import grimoire/parser
+import server/entity
+import server/htmx
+import server/parser
 import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html

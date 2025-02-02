@@ -1,5 +1,5 @@
 import gleam/result
-import grimoire/error
+import server/error
 import sqlight
 
 pub type Connection =

@@ -1,7 +1,7 @@
 *.beam
 *.ez
-/build
-/node_modules
+**/build
+**/node_modules
 erl_crash.dump
 tailwind.min.css
 grimoire.sqlite3

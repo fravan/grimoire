@@ -3,10 +3,10 @@ import gleam/list
 import gleam/option
 import gleam/string
 import gleam/string_tree
-import grimoire/entity
-import grimoire/htmx
-import grimoire/ui
-import grimoire/web
+import server/entity
+import server/htmx
+import server/ui
+import server/web
 import lustre/attribute
 import lustre/element
 import lustre/element/html

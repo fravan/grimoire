@@ -1,5 +1,5 @@
 {
-  "name": "grimoire",
+  "name": "server",
   "version": "1.0.0",
   "description": "[![Package Version](https://img.shields.io/hexpm/v/grimoire)](https://hex.pm/packages/grimoire) [![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/grimoire/)",
   "main": "index.js",
