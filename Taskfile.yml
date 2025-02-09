@@ -1,0 +1,15 @@
+version: "3"
+
+tasks:
+  tailwindcss:
+    dir: client
+    cmds:
+      - tailwindcss -i tailwind.css -o priv/static/client.css -w
+  client:
+    dir: client
+    cmds:
+      - gleam run -m lustre/dev start
+  server:
+    dir: server
+    cmds:
+      - gleam run

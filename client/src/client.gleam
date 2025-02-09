@@ -13,43 +13,48 @@ import plinth/browser/document
 import plinth/browser/element as browser_element
 
 pub fn main() {
-  let assert Ok(json_string) =
-    document.query_selector("#model")
-    |> result.map(browser_element.inner_text)
-
-  let initial_model =
-    json.parse(json_string, decode.int)
-    |> result.unwrap(0)
+  let initial_model = read_initial_model()
 
   let app = lustre.application(init, update, view)
   let assert Ok(_) = lustre.start(app, "#app", initial_model)
   Nil
 }
 
-pub type Model =
-  Int
+fn read_initial_model() {
+  case document.query_selector("#model")
+    |> result.map(browser_element.inner_text) {
+    Ok(json_string) -> json.parse(json_string, decode.string) |> result.unwrap("")
+    Error(_) -> ""
+  }
+}
 
-fn init(initial_model: Int) -> #(Model, Effect(Msg)) {
-  #(initial_model, effect.none())
+pub type Model {
+  Model(
+    is_loading: Bool,
+    quote: String,
+  )
+}
+
+fn init(initial_model: String) -> #(Model, Effect(Msg)) {
+  #(Model(is_loading: False, quote: initial_model), effect.none())
 }
 
 pub type Msg {
-  Increment
-  Decrement
+  UserAskedQuote
+  QuoteLoaded
 }
 
-fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
+fn update(m: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   case msg {
-    Increment -> #(model + 1, effect.none())
-    Decrement -> #(model - 1, effect.none())
+    UserAskedQuote -> #(Model(..m, is_loading: True), effect.none())
+    QuoteLoaded -> #(Model(..m, is_loading: False), effect.none())
   }
 }
 
 fn view(model: Model) -> Element(Msg) {
   html.div([class("flex flex-col gap-12")], [
-    button("Decrement", Decrement),
-    html.p([], [html.text(int.to_string(model))]),
-    button("Increment", Increment),
+    button("Fetch a new quote", UserAskedQuote),
+    html.p([], [html.text(model.quote)]),
   ])
 }
 
@@ -59,7 +64,7 @@ fn button(text: String, on_click_msg: a) -> element.Element(a) {
       event.on_click(on_click_msg),
       class(
         "bg-red-600 text-white text-semibold rounded-lg "
-        <> "hover:bg-red-800 px-2 py-1 "
+        <> "hover:bg-red-800 hover:cursor-pointer px-2 py-1 "
         <> "focus-visible:outline-none focus-visible:ring-2 "
         <> "focus-visible:ring-red-500 focus-visible:ring-offset-2",
       ),
