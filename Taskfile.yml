@@ -1,0 +1,18 @@
+version: "3"
+
+tasks:
+  tailwindcss:
+    dir: server
+    cmds:
+      - tailwindcss -i priv/static/assets/tailwind.css -o priv/static/assets/tailwind.min.css -w
+  build-client:
+    dir: client
+    cmds:
+      - gleam deps update
+      - gleam build
+      - echo "main();" >> build/dev/javascript/client/client.mjs
+      - esbuild build/dev/javascript/client/client.mjs --bundle --outfile=../server/priv/static/assets/local.min.mjs
+  server:
+    dir: server
+    cmds:
+      - gleam run

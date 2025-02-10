@@ -1,5 +1,4 @@
 import gleam/list
-import gleam/string_tree
 import server/entity
 import server/htmx
 import server/parser
@@ -16,7 +15,7 @@ pub fn layout(elements: List(Element(a))) {
         attribute.href("/assets/tailwind.min.css"),
       ]),
       html.script([attribute.src("/vendors/htmx-v2-0-4.min.js")], ""),
-      html.script([attribute.src("/assets/local.js")], ""),
+      html.script([attribute.src("/assets/local.min.mjs")], ""),
     ]),
     html.body([lustre_hx.boost(True)], elements),
   ])
