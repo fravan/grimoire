@@ -2,6 +2,8 @@
 *.ez
 **/build
 **/node_modules
+**/.task
 erl_crash.dump
 tailwind.min.css
+client.min.mjs
 grimoire.sqlite3
