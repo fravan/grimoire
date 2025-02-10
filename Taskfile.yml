@@ -1,6 +1,20 @@
 version: "3"
 
 tasks:
+  clean:
+    deps: [clean-client, clean-server, clean-shared]
+  clean-client:
+    dir: client
+    cmds:
+      - gleam clean
+  clean-server:
+    dir: server
+    cmds:
+      - gleam clean
+  clean-shared:
+    dir: shared
+    cmds:
+      - gleam clean
   tailwindcss:
     dir: client
     cmds:
