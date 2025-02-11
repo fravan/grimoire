@@ -22,7 +22,7 @@ tasks:
   client:
     dir: client
     cmds:
-      - gleam run -m lustre/dev start
+      - gleam run -m lustre/dev start --proxy-from=/api --proxy-to=http://localhost:3000/api
   server:
     dir: server
     cmds:

@@ -9,7 +9,8 @@
     --color-red-500: oklch(0.637 0.237 25.331);
     --color-red-600: oklch(0.577 0.245 27.325);
     --color-red-800: oklch(0.444 0.177 26.899);
-    --color-blue-800: oklch(0.424 0.199 265.638);
+    --color-green-400: oklch(0.792 0.209 151.711);
+    --color-gray-500: oklch(0.551 0.027 264.364);
     --color-white: #fff;
     --spacing: 0.25rem;
     --radius-lg: 0.5rem;
@@ -169,11 +170,38 @@
   }
 }
 @layer utilities {
+  .collapse {
+    visibility: collapse;
+  }
+  .relative {
+    position: relative;
+  }
   .static {
     position: static;
   }
+  .block {
+    display: block;
+  }
+  .contents {
+    display: contents;
+  }
   .flex {
     display: flex;
+  }
+  .inline-flex {
+    display: inline-flex;
+  }
+  .list-item {
+    display: list-item;
+  }
+  .table {
+    display: table;
+  }
+  .border-collapse {
+    border-collapse: collapse;
+  }
+  .resize {
+    resize: both;
   }
   .flex-col {
     flex-direction: column;
@@ -183,6 +211,13 @@
   }
   .rounded-lg {
     border-radius: var(--radius-lg);
+  }
+  .border {
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+  }
+  .bg-green-400 {
+    background-color: var(--color-green-400);
   }
   .bg-red-600 {
     background-color: var(--color-red-600);
@@ -196,19 +231,15 @@
   .text-white {
     color: var(--color-white);
   }
-  .hover\:cursor-pointer {
-    &:hover {
-      @media (hover: hover) {
-        cursor: pointer;
-      }
-    }
+  .lowercase {
+    text-transform: lowercase;
   }
-  .hover\:bg-blue-800 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-blue-800);
-      }
-    }
+  .underline {
+    text-decoration-line: underline;
+  }
+  .outline {
+    outline-style: var(--tw-outline-style);
+    outline-width: 1px;
   }
   .hover\:bg-red-800 {
     &:hover {
@@ -240,6 +271,30 @@
       outline-style: none;
     }
   }
+  .hover\:enabled\:cursor-pointer {
+    &:hover {
+      @media (hover: hover) {
+        &:enabled {
+          cursor: pointer;
+        }
+      }
+    }
+  }
+  .disabled\:bg-gray-500 {
+    &:disabled {
+      background-color: var(--color-gray-500);
+    }
+  }
+}
+@property --tw-border-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@property --tw-outline-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
 }
 @property --tw-shadow {
   syntax: "*";

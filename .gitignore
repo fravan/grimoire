@@ -2,6 +2,7 @@
 *.ez
 /build
 /node_modules
+/.task
 erl_crash.dump
 tailwind.min.css
 grimoire.sqlite3

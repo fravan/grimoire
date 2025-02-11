@@ -3,6 +3,7 @@ import birl/duration
 import gleam/http
 import gleam/int
 import gleam/string
+import gleam/string_tree
 import logging
 import lustre/attribute
 import lustre/element
@@ -44,6 +45,11 @@ pub fn handle_request(req: Request, ctx: web.Context) -> Response {
 
   case wisp.path_segments(req) {
     [] -> home()
+    ["api", "quotes"] ->
+      wisp.response(200)
+      |> wisp.json_body(string_tree.from_string(
+        "{\"content\": \"Hello there!\", \"author\": \"Michel\" }",
+      ))
     _ -> wisp.not_found()
   }
 }
@@ -51,8 +57,9 @@ pub fn handle_request(req: Request, ctx: web.Context) -> Response {
 fn home() -> Response {
   let content =
     html.div([attribute.class("p-2 flex text-center")], [
-      html.p([attribute.class("p-4")], [
-      html.text("Hello, world!")])]) |> page_scaffold("")
+      html.p([attribute.class("p-4")], [html.text("Hello, world!")]),
+    ])
+    |> page_scaffold("")
 
   wisp.response(200)
   |> wisp.html_body(content |> element.to_document_string_builder())

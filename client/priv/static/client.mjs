@@ -41,10 +41,10 @@ var List = class {
   }
   // @internal
   countLength() {
-    let length3 = 0;
+    let length4 = 0;
     for (let _ of this)
-      length3++;
-    return length3;
+      length4++;
+    return length4;
   }
 };
 function prepend(element2, tail) {
@@ -89,8 +89,8 @@ var BitArray = class _BitArray {
     return this.buffer.length;
   }
   // @internal
-  byteAt(index4) {
-    return this.buffer[index4];
+  byteAt(index5) {
+    return this.buffer[index5];
   }
   // @internal
   floatFromSlice(start3, end, isBigEndian) {
@@ -110,11 +110,11 @@ var BitArray = class _BitArray {
     return new _BitArray(buffer);
   }
   // @internal
-  sliceAfter(index4) {
+  sliceAfter(index5) {
     const buffer = new Uint8Array(
       this.buffer.buffer,
-      this.buffer.byteOffset + index4,
-      this.buffer.byteLength - index4
+      this.buffer.byteOffset + index5,
+      this.buffer.byteLength - index5
     );
     return new _BitArray(buffer);
   }
@@ -219,9 +219,9 @@ function isEqual(x, y) {
       } catch {
       }
     }
-    let [keys2, get] = getters(a);
+    let [keys2, get2] = getters(a);
     for (let k of keys2(a)) {
-      values2.push(get(a, k), get(b, k));
+      values2.push(get2(a, k), get2(b, k));
     }
   }
   return true;
@@ -276,87 +276,59 @@ function makeError(variant, module, line, fn, message, extra) {
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/option.mjs
+var Some = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
 var None = class extends CustomType {
 };
-
-// build/dev/javascript/gleam_stdlib/gleam/dict.mjs
-function insert(dict2, key2, value2) {
-  return map_insert(key2, value2, dict2);
-}
-function reverse_and_concat(loop$remaining, loop$accumulator) {
-  while (true) {
-    let remaining = loop$remaining;
-    let accumulator = loop$accumulator;
-    if (remaining.hasLength(0)) {
-      return accumulator;
-    } else {
-      let item = remaining.head;
-      let rest = remaining.tail;
-      loop$remaining = rest;
-      loop$accumulator = prepend(item, accumulator);
-    }
+function to_result(option, e) {
+  if (option instanceof Some) {
+    let a = option[0];
+    return new Ok(a);
+  } else {
+    return new Error(e);
   }
 }
-function do_keys_loop(loop$list, loop$acc) {
-  while (true) {
-    let list2 = loop$list;
-    let acc = loop$acc;
-    if (list2.hasLength(0)) {
-      return reverse_and_concat(acc, toList([]));
-    } else {
-      let first2 = list2.head;
-      let rest = list2.tail;
-      loop$list = rest;
-      loop$acc = prepend(first2[0], acc);
-    }
+function unwrap(option, default$) {
+  if (option instanceof Some) {
+    let x = option[0];
+    return x;
+  } else {
+    return default$;
   }
-}
-function keys(dict2) {
-  let list_of_pairs = map_to_list(dict2);
-  return do_keys_loop(list_of_pairs, toList([]));
 }
 
-// build/dev/javascript/gleam_stdlib/gleam/list.mjs
-function fold(loop$list, loop$initial, loop$fun) {
+// build/dev/javascript/gleam_stdlib/gleam/string.mjs
+function concat2(strings) {
+  let _pipe = strings;
+  let _pipe$1 = concat(_pipe);
+  return identity(_pipe$1);
+}
+function drop_start(loop$string, loop$num_graphemes) {
   while (true) {
-    let list2 = loop$list;
-    let initial = loop$initial;
-    let fun = loop$fun;
-    if (list2.hasLength(0)) {
-      return initial;
+    let string5 = loop$string;
+    let num_graphemes = loop$num_graphemes;
+    let $ = num_graphemes > 0;
+    if (!$) {
+      return string5;
     } else {
-      let x = list2.head;
-      let rest$1 = list2.tail;
-      loop$list = rest$1;
-      loop$initial = fun(initial, x);
-      loop$fun = fun;
+      let $1 = pop_grapheme(string5);
+      if ($1.isOk()) {
+        let string$1 = $1[0][1];
+        loop$string = string$1;
+        loop$num_graphemes = num_graphemes - 1;
+      } else {
+        return string5;
+      }
     }
   }
-}
-function index_fold_loop(loop$over, loop$acc, loop$with, loop$index) {
-  while (true) {
-    let over = loop$over;
-    let acc = loop$acc;
-    let with$ = loop$with;
-    let index4 = loop$index;
-    if (over.hasLength(0)) {
-      return acc;
-    } else {
-      let first$1 = over.head;
-      let rest$1 = over.tail;
-      loop$over = rest$1;
-      loop$acc = with$(acc, first$1, index4);
-      loop$with = with$;
-      loop$index = index4 + 1;
-    }
-  }
-}
-function index_fold(list2, initial, fun) {
-  return index_fold_loop(list2, initial, fun, 0);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
-function map(result, fun) {
+function map2(result, fun) {
   if (result.isOk()) {
     let x = result[0];
     return new Ok(fun(x));
@@ -386,12 +358,29 @@ function try$(result, fun) {
 function then$(result, fun) {
   return try$(result, fun);
 }
-function unwrap(result, default$) {
+function unwrap2(result, default$) {
   if (result.isOk()) {
     let v = result[0];
     return v;
   } else {
     return default$;
+  }
+}
+function unwrap_both(result) {
+  if (result.isOk()) {
+    let a = result[0];
+    return a;
+  } else {
+    let a = result[0];
+    return a;
+  }
+}
+function replace_error(result, error) {
+  if (result.isOk()) {
+    let x = result[0];
+    return new Ok(x);
+  } else {
+    return new Error(error);
   }
 }
 
@@ -1110,25 +1099,44 @@ function to_string(term) {
   return term.toString();
 }
 var segmenter = void 0;
-function graphemes_iterator(string4) {
+function graphemes_iterator(string5) {
   if (globalThis.Intl && Intl.Segmenter) {
     segmenter ||= new Intl.Segmenter();
-    return segmenter.segment(string4)[Symbol.iterator]();
+    return segmenter.segment(string5)[Symbol.iterator]();
   }
 }
-function pop_grapheme(string4) {
+function pop_grapheme(string5) {
   let first2;
-  const iterator = graphemes_iterator(string4);
+  const iterator = graphemes_iterator(string5);
   if (iterator) {
     first2 = iterator.next().value?.segment;
   } else {
-    first2 = string4.match(/./su)?.[0];
+    first2 = string5.match(/./su)?.[0];
   }
   if (first2) {
-    return new Ok([first2, string4.slice(first2.length)]);
+    return new Ok([first2, string5.slice(first2.length)]);
   } else {
     return new Error(Nil);
   }
+}
+function pop_codeunit(str) {
+  return [str.charCodeAt(0) | 0, str.slice(1)];
+}
+function lowercase(string5) {
+  return string5.toLowerCase();
+}
+function concat(xs) {
+  let result = "";
+  for (const x of xs) {
+    result = result + x;
+  }
+  return result;
+}
+function string_codeunit_slice(str, from2, length4) {
+  return str.slice(from2, from2 + length4);
+}
+function starts_with(haystack, needle) {
+  return haystack.startsWith(needle);
 }
 var unicode_whitespaces = [
   " ",
@@ -1155,11 +1163,11 @@ var trim_end_regex = new RegExp(`[${unicode_whitespaces}]*$`);
 function new_map() {
   return Dict.new();
 }
-function map_to_list(map5) {
-  return List.fromArray(map5.entries());
+function map_to_list(map7) {
+  return List.fromArray(map7.entries());
 }
-function map_insert(key2, value2, map5) {
-  return map5.set(key2, value2);
+function map_insert(key2, value2, map7) {
+  return map7.set(key2, value2);
 }
 function classify_dynamic(data) {
   if (typeof data === "string") {
@@ -1190,30 +1198,1292 @@ function classify_dynamic(data) {
   }
 }
 
-// build/dev/javascript/gleam_stdlib/gleam/string.mjs
-function drop_start(loop$string, loop$num_graphemes) {
+// build/dev/javascript/gleam_stdlib/gleam/dict.mjs
+function insert(dict2, key2, value2) {
+  return map_insert(key2, value2, dict2);
+}
+function reverse_and_concat(loop$remaining, loop$accumulator) {
   while (true) {
-    let string4 = loop$string;
-    let num_graphemes = loop$num_graphemes;
-    let $ = num_graphemes > 0;
-    if (!$) {
-      return string4;
+    let remaining = loop$remaining;
+    let accumulator = loop$accumulator;
+    if (remaining.hasLength(0)) {
+      return accumulator;
     } else {
-      let $1 = pop_grapheme(string4);
-      if ($1.isOk()) {
-        let string$1 = $1[0][1];
-        loop$string = string$1;
-        loop$num_graphemes = num_graphemes - 1;
+      let item = remaining.head;
+      let rest = remaining.tail;
+      loop$remaining = rest;
+      loop$accumulator = prepend(item, accumulator);
+    }
+  }
+}
+function do_keys_loop(loop$list, loop$acc) {
+  while (true) {
+    let list2 = loop$list;
+    let acc = loop$acc;
+    if (list2.hasLength(0)) {
+      return reverse_and_concat(acc, toList([]));
+    } else {
+      let first2 = list2.head;
+      let rest = list2.tail;
+      loop$list = rest;
+      loop$acc = prepend(first2[0], acc);
+    }
+  }
+}
+function keys(dict2) {
+  let list_of_pairs = map_to_list(dict2);
+  return do_keys_loop(list_of_pairs, toList([]));
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/list.mjs
+function reverse_loop(loop$remaining, loop$accumulator) {
+  while (true) {
+    let remaining = loop$remaining;
+    let accumulator = loop$accumulator;
+    if (remaining.hasLength(0)) {
+      return accumulator;
+    } else {
+      let item = remaining.head;
+      let rest$1 = remaining.tail;
+      loop$remaining = rest$1;
+      loop$accumulator = prepend(item, accumulator);
+    }
+  }
+}
+function reverse(list2) {
+  return reverse_loop(list2, toList([]));
+}
+function map_loop(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list2 = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list2.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let first$1 = list2.head;
+      let rest$1 = list2.tail;
+      loop$list = rest$1;
+      loop$fun = fun;
+      loop$acc = prepend(fun(first$1), acc);
+    }
+  }
+}
+function map(list2, fun) {
+  return map_loop(list2, fun, toList([]));
+}
+function append_loop(loop$first, loop$second) {
+  while (true) {
+    let first2 = loop$first;
+    let second = loop$second;
+    if (first2.hasLength(0)) {
+      return second;
+    } else {
+      let item = first2.head;
+      let rest$1 = first2.tail;
+      loop$first = rest$1;
+      loop$second = prepend(item, second);
+    }
+  }
+}
+function append3(first2, second) {
+  return append_loop(reverse(first2), second);
+}
+function fold(loop$list, loop$initial, loop$fun) {
+  while (true) {
+    let list2 = loop$list;
+    let initial = loop$initial;
+    let fun = loop$fun;
+    if (list2.hasLength(0)) {
+      return initial;
+    } else {
+      let x = list2.head;
+      let rest$1 = list2.tail;
+      loop$list = rest$1;
+      loop$initial = fun(initial, x);
+      loop$fun = fun;
+    }
+  }
+}
+function index_fold_loop(loop$over, loop$acc, loop$with, loop$index) {
+  while (true) {
+    let over = loop$over;
+    let acc = loop$acc;
+    let with$ = loop$with;
+    let index5 = loop$index;
+    if (over.hasLength(0)) {
+      return acc;
+    } else {
+      let first$1 = over.head;
+      let rest$1 = over.tail;
+      loop$over = rest$1;
+      loop$acc = with$(acc, first$1, index5);
+      loop$with = with$;
+      loop$index = index5 + 1;
+    }
+  }
+}
+function index_fold(list2, initial, fun) {
+  return index_fold_loop(list2, initial, fun, 0);
+}
+function find_map(loop$list, loop$fun) {
+  while (true) {
+    let list2 = loop$list;
+    let fun = loop$fun;
+    if (list2.hasLength(0)) {
+      return new Error(void 0);
+    } else {
+      let x = list2.head;
+      let rest$1 = list2.tail;
+      let $ = fun(x);
+      if ($.isOk()) {
+        let x$1 = $[0];
+        return new Ok(x$1);
       } else {
-        return string4;
+        loop$list = rest$1;
+        loop$fun = fun;
       }
     }
   }
 }
+function key_find(keyword_list, desired_key) {
+  return find_map(
+    keyword_list,
+    (keyword) => {
+      let key2 = keyword[0];
+      let value2 = keyword[1];
+      let $ = isEqual(key2, desired_key);
+      if ($) {
+        return new Ok(value2);
+      } else {
+        return new Error(void 0);
+      }
+    }
+  );
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/uri.mjs
+var Uri = class extends CustomType {
+  constructor(scheme, userinfo, host, port, path, query, fragment) {
+    super();
+    this.scheme = scheme;
+    this.userinfo = userinfo;
+    this.host = host;
+    this.port = port;
+    this.path = path;
+    this.query = query;
+    this.fragment = fragment;
+  }
+};
+function is_valid_host_within_brackets_char(char) {
+  return 48 >= char && char <= 57 || 65 >= char && char <= 90 || 97 >= char && char <= 122 || char === 58 || char === 46;
+}
+function parse_fragment(rest, pieces) {
+  return new Ok(
+    (() => {
+      let _record = pieces;
+      return new Uri(
+        _record.scheme,
+        _record.userinfo,
+        _record.host,
+        _record.port,
+        _record.path,
+        _record.query,
+        new Some(rest)
+      );
+    })()
+  );
+}
+function parse_query_with_question_mark_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("#") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_fragment(rest, pieces);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let query = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          _record.path,
+          new Some(query),
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            _record.path,
+            new Some(original),
+            _record.fragment
+          );
+        })()
+      );
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse_query_with_question_mark(uri_string, pieces) {
+  return parse_query_with_question_mark_loop(uri_string, uri_string, pieces, 0);
+}
+function parse_path_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let path = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let path = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            original,
+            _record.query,
+            _record.fragment
+          );
+        })()
+      );
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse_path(uri_string, pieces) {
+  return parse_path_loop(uri_string, uri_string, pieces, 0);
+}
+function parse_port_loop(loop$uri_string, loop$pieces, loop$port) {
+  while (true) {
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let port = loop$port;
+    if (uri_string.startsWith("0")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10;
+    } else if (uri_string.startsWith("1")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 1;
+    } else if (uri_string.startsWith("2")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 2;
+    } else if (uri_string.startsWith("3")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 3;
+    } else if (uri_string.startsWith("4")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 4;
+    } else if (uri_string.startsWith("5")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 5;
+    } else if (uri_string.startsWith("6")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 6;
+    } else if (uri_string.startsWith("7")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 7;
+    } else if (uri_string.startsWith("8")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 8;
+    } else if (uri_string.startsWith("9")) {
+      let rest = uri_string.slice(1);
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$port = port * 10 + 9;
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          new Some(port),
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          new Some(port),
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string.startsWith("/")) {
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          _record.host,
+          new Some(port),
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_path(uri_string, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            new Some(port),
+            _record.path,
+            _record.query,
+            _record.fragment
+          );
+        })()
+      );
+    } else {
+      return new Error(void 0);
+    }
+  }
+}
+function parse_port(uri_string, pieces) {
+  if (uri_string.startsWith(":0")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 0);
+  } else if (uri_string.startsWith(":1")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 1);
+  } else if (uri_string.startsWith(":2")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 2);
+  } else if (uri_string.startsWith(":3")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 3);
+  } else if (uri_string.startsWith(":4")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 4);
+  } else if (uri_string.startsWith(":5")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 5);
+  } else if (uri_string.startsWith(":6")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 6);
+  } else if (uri_string.startsWith(":7")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 7);
+  } else if (uri_string.startsWith(":8")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 8);
+  } else if (uri_string.startsWith(":9")) {
+    let rest = uri_string.slice(2);
+    return parse_port_loop(rest, pieces, 9);
+  } else if (uri_string.startsWith(":")) {
+    return new Error(void 0);
+  } else if (uri_string.startsWith("?")) {
+    let rest = uri_string.slice(1);
+    return parse_query_with_question_mark(rest, pieces);
+  } else if (uri_string.startsWith("#")) {
+    let rest = uri_string.slice(1);
+    return parse_fragment(rest, pieces);
+  } else if (uri_string.startsWith("/")) {
+    return parse_path(uri_string, pieces);
+  } else if (uri_string === "") {
+    return new Ok(pieces);
+  } else {
+    return new Error(void 0);
+  }
+}
+function parse_host_outside_of_brackets_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(original),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment
+          );
+        })()
+      );
+    } else if (uri_string.startsWith(":")) {
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_port(uri_string, pieces$1);
+    } else if (uri_string.startsWith("/")) {
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_path(uri_string, pieces$1);
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse_host_within_brackets_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            new Some(uri_string),
+            _record.port,
+            _record.path,
+            _record.query,
+            _record.fragment
+          );
+        })()
+      );
+    } else if (uri_string.startsWith("]") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_port(rest, pieces);
+    } else if (uri_string.startsWith("]")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size + 1);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_port(rest, pieces$1);
+    } else if (uri_string.startsWith("/") && size === 0) {
+      return parse_path(uri_string, pieces);
+    } else if (uri_string.startsWith("/")) {
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_path(uri_string, pieces$1);
+    } else if (uri_string.startsWith("?") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_query_with_question_mark(rest, pieces);
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_fragment(rest, pieces);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let host = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(host),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let char = $[0];
+      let rest = $[1];
+      let $1 = is_valid_host_within_brackets_char(char);
+      if ($1) {
+        loop$original = original;
+        loop$uri_string = rest;
+        loop$pieces = pieces;
+        loop$size = size + 1;
+      } else {
+        return parse_host_outside_of_brackets_loop(
+          original,
+          original,
+          pieces,
+          0
+        );
+      }
+    }
+  }
+}
+function parse_host_within_brackets(uri_string, pieces) {
+  return parse_host_within_brackets_loop(uri_string, uri_string, pieces, 0);
+}
+function parse_host_outside_of_brackets(uri_string, pieces) {
+  return parse_host_outside_of_brackets_loop(uri_string, uri_string, pieces, 0);
+}
+function parse_host(uri_string, pieces) {
+  if (uri_string.startsWith("[")) {
+    return parse_host_within_brackets(uri_string, pieces);
+  } else if (uri_string.startsWith(":")) {
+    let pieces$1 = (() => {
+      let _record = pieces;
+      return new Uri(
+        _record.scheme,
+        _record.userinfo,
+        new Some(""),
+        _record.port,
+        _record.path,
+        _record.query,
+        _record.fragment
+      );
+    })();
+    return parse_port(uri_string, pieces$1);
+  } else if (uri_string === "") {
+    return new Ok(
+      (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(""),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })()
+    );
+  } else {
+    return parse_host_outside_of_brackets(uri_string, pieces);
+  }
+}
+function parse_userinfo_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("@") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_host(rest, pieces);
+    } else if (uri_string.startsWith("@")) {
+      let rest = uri_string.slice(1);
+      let userinfo = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          new Some(userinfo),
+          _record.host,
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_host(rest, pieces$1);
+    } else if (uri_string === "") {
+      return parse_host(original, pieces);
+    } else if (uri_string.startsWith("/")) {
+      return parse_host(original, pieces);
+    } else if (uri_string.startsWith("?")) {
+      return parse_host(original, pieces);
+    } else if (uri_string.startsWith("#")) {
+      return parse_host(original, pieces);
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse_authority_pieces(string5, pieces) {
+  return parse_userinfo_loop(string5, string5, pieces, 0);
+}
+function parse_authority_with_slashes(uri_string, pieces) {
+  if (uri_string === "//") {
+    return new Ok(
+      (() => {
+        let _record = pieces;
+        return new Uri(
+          _record.scheme,
+          _record.userinfo,
+          new Some(""),
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })()
+    );
+  } else if (uri_string.startsWith("//")) {
+    let rest = uri_string.slice(2);
+    return parse_authority_pieces(rest, pieces);
+  } else {
+    return parse_path(uri_string, pieces);
+  }
+}
+function parse_scheme_loop(loop$original, loop$uri_string, loop$pieces, loop$size) {
+  while (true) {
+    let original = loop$original;
+    let uri_string = loop$uri_string;
+    let pieces = loop$pieces;
+    let size = loop$size;
+    if (uri_string.startsWith("/") && size === 0) {
+      return parse_authority_with_slashes(uri_string, pieces);
+    } else if (uri_string.startsWith("/")) {
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          new Some(lowercase(scheme)),
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_authority_with_slashes(uri_string, pieces$1);
+    } else if (uri_string.startsWith("?") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_query_with_question_mark(rest, pieces);
+    } else if (uri_string.startsWith("?")) {
+      let rest = uri_string.slice(1);
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          new Some(lowercase(scheme)),
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_query_with_question_mark(rest, pieces$1);
+    } else if (uri_string.startsWith("#") && size === 0) {
+      let rest = uri_string.slice(1);
+      return parse_fragment(rest, pieces);
+    } else if (uri_string.startsWith("#")) {
+      let rest = uri_string.slice(1);
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          new Some(lowercase(scheme)),
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_fragment(rest, pieces$1);
+    } else if (uri_string.startsWith(":") && size === 0) {
+      return new Error(void 0);
+    } else if (uri_string.startsWith(":")) {
+      let rest = uri_string.slice(1);
+      let scheme = string_codeunit_slice(original, 0, size);
+      let pieces$1 = (() => {
+        let _record = pieces;
+        return new Uri(
+          new Some(lowercase(scheme)),
+          _record.userinfo,
+          _record.host,
+          _record.port,
+          _record.path,
+          _record.query,
+          _record.fragment
+        );
+      })();
+      return parse_authority_with_slashes(rest, pieces$1);
+    } else if (uri_string === "") {
+      return new Ok(
+        (() => {
+          let _record = pieces;
+          return new Uri(
+            _record.scheme,
+            _record.userinfo,
+            _record.host,
+            _record.port,
+            original,
+            _record.query,
+            _record.fragment
+          );
+        })()
+      );
+    } else {
+      let $ = pop_codeunit(uri_string);
+      let rest = $[1];
+      loop$original = original;
+      loop$uri_string = rest;
+      loop$pieces = pieces;
+      loop$size = size + 1;
+    }
+  }
+}
+function parse(uri_string) {
+  let default_pieces = new Uri(
+    new None(),
+    new None(),
+    new None(),
+    new None(),
+    "",
+    new None(),
+    new None()
+  );
+  return parse_scheme_loop(uri_string, uri_string, default_pieces, 0);
+}
+function to_string2(uri) {
+  let parts = (() => {
+    let $ = uri.fragment;
+    if ($ instanceof Some) {
+      let fragment = $[0];
+      return toList(["#", fragment]);
+    } else {
+      return toList([]);
+    }
+  })();
+  let parts$1 = (() => {
+    let $ = uri.query;
+    if ($ instanceof Some) {
+      let query = $[0];
+      return prepend("?", prepend(query, parts));
+    } else {
+      return parts;
+    }
+  })();
+  let parts$2 = prepend(uri.path, parts$1);
+  let parts$3 = (() => {
+    let $ = uri.host;
+    let $1 = starts_with(uri.path, "/");
+    if ($ instanceof Some && !$1 && $[0] !== "") {
+      let host = $[0];
+      return prepend("/", parts$2);
+    } else {
+      return parts$2;
+    }
+  })();
+  let parts$4 = (() => {
+    let $ = uri.host;
+    let $1 = uri.port;
+    if ($ instanceof Some && $1 instanceof Some) {
+      let port = $1[0];
+      return prepend(":", prepend(to_string(port), parts$3));
+    } else {
+      return parts$3;
+    }
+  })();
+  let parts$5 = (() => {
+    let $ = uri.scheme;
+    let $1 = uri.userinfo;
+    let $2 = uri.host;
+    if ($ instanceof Some && $1 instanceof Some && $2 instanceof Some) {
+      let s = $[0];
+      let u = $1[0];
+      let h = $2[0];
+      return prepend(
+        s,
+        prepend(
+          "://",
+          prepend(u, prepend("@", prepend(h, parts$4)))
+        )
+      );
+    } else if ($ instanceof Some && $1 instanceof None && $2 instanceof Some) {
+      let s = $[0];
+      let h = $2[0];
+      return prepend(s, prepend("://", prepend(h, parts$4)));
+    } else if ($ instanceof Some && $1 instanceof Some && $2 instanceof None) {
+      let s = $[0];
+      return prepend(s, prepend(":", parts$4));
+    } else if ($ instanceof Some && $1 instanceof None && $2 instanceof None) {
+      let s = $[0];
+      return prepend(s, prepend(":", parts$4));
+    } else if ($ instanceof None && $1 instanceof None && $2 instanceof Some) {
+      let h = $2[0];
+      return prepend("//", prepend(h, parts$4));
+    } else {
+      return parts$4;
+    }
+  })();
+  return concat2(parts$5);
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/bool.mjs
+function guard(requirement, consequence, alternative) {
+  if (requirement) {
+    return consequence;
+  } else {
+    return alternative();
+  }
+}
+
+// build/dev/javascript/gleam_http/gleam/http.mjs
+var Get = class extends CustomType {
+};
+var Post = class extends CustomType {
+};
+var Head = class extends CustomType {
+};
+var Put = class extends CustomType {
+};
+var Delete = class extends CustomType {
+};
+var Trace = class extends CustomType {
+};
+var Connect = class extends CustomType {
+};
+var Options = class extends CustomType {
+};
+var Patch = class extends CustomType {
+};
+var Http = class extends CustomType {
+};
+var Https = class extends CustomType {
+};
+function method_to_string(method) {
+  if (method instanceof Connect) {
+    return "connect";
+  } else if (method instanceof Delete) {
+    return "delete";
+  } else if (method instanceof Get) {
+    return "get";
+  } else if (method instanceof Head) {
+    return "head";
+  } else if (method instanceof Options) {
+    return "options";
+  } else if (method instanceof Patch) {
+    return "patch";
+  } else if (method instanceof Post) {
+    return "post";
+  } else if (method instanceof Put) {
+    return "put";
+  } else if (method instanceof Trace) {
+    return "trace";
+  } else {
+    let s = method[0];
+    return s;
+  }
+}
+function scheme_to_string(scheme) {
+  if (scheme instanceof Http) {
+    return "http";
+  } else {
+    return "https";
+  }
+}
+function scheme_from_string(scheme) {
+  let $ = lowercase(scheme);
+  if ($ === "http") {
+    return new Ok(new Http());
+  } else if ($ === "https") {
+    return new Ok(new Https());
+  } else {
+    return new Error(void 0);
+  }
+}
+
+// build/dev/javascript/gleam_http/gleam/http/request.mjs
+var Request = class extends CustomType {
+  constructor(method, headers, body2, scheme, host, port, path, query) {
+    super();
+    this.method = method;
+    this.headers = headers;
+    this.body = body2;
+    this.scheme = scheme;
+    this.host = host;
+    this.port = port;
+    this.path = path;
+    this.query = query;
+  }
+};
+function to_uri(request) {
+  return new Uri(
+    new Some(scheme_to_string(request.scheme)),
+    new None(),
+    new Some(request.host),
+    request.port,
+    request.path,
+    request.query,
+    new None()
+  );
+}
+function from_uri(uri) {
+  return then$(
+    (() => {
+      let _pipe = uri.scheme;
+      let _pipe$1 = unwrap(_pipe, "");
+      return scheme_from_string(_pipe$1);
+    })(),
+    (scheme) => {
+      return then$(
+        (() => {
+          let _pipe = uri.host;
+          return to_result(_pipe, void 0);
+        })(),
+        (host) => {
+          let req = new Request(
+            new Get(),
+            toList([]),
+            "",
+            scheme,
+            host,
+            uri.port,
+            uri.path,
+            uri.query
+          );
+          return new Ok(req);
+        }
+      );
+    }
+  );
+}
+
+// build/dev/javascript/gleam_http/gleam/http/response.mjs
+var Response = class extends CustomType {
+  constructor(status, headers, body2) {
+    super();
+    this.status = status;
+    this.headers = headers;
+    this.body = body2;
+  }
+};
+function get_header(response, key2) {
+  return key_find(response.headers, lowercase(key2));
+}
+
+// build/dev/javascript/gleam_javascript/gleam_javascript_ffi.mjs
+var PromiseLayer = class _PromiseLayer {
+  constructor(promise) {
+    this.promise = promise;
+  }
+  static wrap(value2) {
+    return value2 instanceof Promise ? new _PromiseLayer(value2) : value2;
+  }
+  static unwrap(value2) {
+    return value2 instanceof _PromiseLayer ? value2.promise : value2;
+  }
+};
+function resolve(value2) {
+  return Promise.resolve(PromiseLayer.wrap(value2));
+}
+function then_await(promise, fn) {
+  return promise.then((value2) => fn(PromiseLayer.unwrap(value2)));
+}
+function map_promise(promise, fn) {
+  return promise.then(
+    (value2) => PromiseLayer.wrap(fn(PromiseLayer.unwrap(value2)))
+  );
+}
+
+// build/dev/javascript/gleam_javascript/gleam/javascript/promise.mjs
+function tap(promise, callback) {
+  let _pipe = promise;
+  return map_promise(
+    _pipe,
+    (a) => {
+      callback(a);
+      return a;
+    }
+  );
+}
+function try_await(promise, callback) {
+  let _pipe = promise;
+  return then_await(
+    _pipe,
+    (result) => {
+      if (result.isOk()) {
+        let a = result[0];
+        return callback(a);
+      } else {
+        let e = result[0];
+        return resolve(new Error(e));
+      }
+    }
+  );
+}
+
+// build/dev/javascript/gleam_fetch/gleam_fetch_ffi.mjs
+async function raw_send(request) {
+  try {
+    return new Ok(await fetch(request));
+  } catch (error) {
+    return new Error(new NetworkError(error.toString()));
+  }
+}
+function from_fetch_response(response) {
+  return new Response(
+    response.status,
+    List.fromArray([...response.headers]),
+    response
+  );
+}
+function request_common(request) {
+  let url = to_string2(to_uri(request));
+  let method = method_to_string(request.method).toUpperCase();
+  let options = {
+    headers: make_headers(request.headers),
+    method
+  };
+  return [url, options];
+}
+function to_fetch_request(request) {
+  let [url, options] = request_common(request);
+  if (options.method !== "GET" && options.method !== "HEAD")
+    options.body = request.body;
+  return new globalThis.Request(url, options);
+}
+function make_headers(headersList) {
+  let headers = new globalThis.Headers();
+  for (let [k, v] of headersList)
+    headers.append(k.toLowerCase(), v);
+  return headers;
+}
+async function read_text_body(response) {
+  let body2;
+  try {
+    body2 = await response.body.text();
+  } catch (error) {
+    return new Error(new UnableToReadBody());
+  }
+  return new Ok(response.withFields({ body: body2 }));
+}
+
+// build/dev/javascript/gleam_fetch/gleam/fetch.mjs
+var NetworkError = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var UnableToReadBody = class extends CustomType {
+};
+function send(request) {
+  let _pipe = request;
+  let _pipe$1 = to_fetch_request(_pipe);
+  let _pipe$2 = raw_send(_pipe$1);
+  return try_await(
+    _pipe$2,
+    (resp) => {
+      return resolve(new Ok(from_fetch_response(resp)));
+    }
+  );
+}
 
 // build/dev/javascript/gleam_stdlib/gleam_stdlib_decode_ffi.mjs
+function index3(data, key2) {
+  const int4 = Number.isInteger(key2);
+  if (data instanceof Dict || data instanceof WeakMap || data instanceof Map) {
+    const token = {};
+    const entry = data.get(key2, token);
+    if (entry === token)
+      return new Ok(new None());
+    return new Ok(new Some(entry));
+  }
+  if ((key2 === 0 || key2 === 1 || key2 === 2) && data instanceof List) {
+    let i = 0;
+    for (const value2 of data) {
+      if (i === key2)
+        return new Ok(new Some(value2));
+      i++;
+    }
+    return new Error("Indexable");
+  }
+  if (int4 && Array.isArray(data) || data && typeof data === "object" || data && Object.getPrototypeOf(data) === Object.prototype) {
+    if (key2 in data)
+      return new Ok(new Some(data[key2]));
+    return new Ok(new None());
+  }
+  return new Error(int4 ? "Indexable" : "Dict");
+}
 function int(data) {
   if (Number.isInteger(data))
+    return new Ok(data);
+  return new Error(0);
+}
+function string(data) {
+  if (typeof data === "string")
     return new Ok(data);
   return new Error(0);
 }
@@ -1243,6 +2513,58 @@ function run(data, decoder) {
     return new Error(errors);
   }
 }
+function success(data) {
+  return new Decoder((_) => {
+    return [data, toList([])];
+  });
+}
+function map5(decoder, transformer) {
+  return new Decoder(
+    (d) => {
+      let $ = decoder.function(d);
+      let data = $[0];
+      let errors = $[1];
+      return [transformer(data), errors];
+    }
+  );
+}
+function run_decoders(loop$data, loop$failure, loop$decoders) {
+  while (true) {
+    let data = loop$data;
+    let failure = loop$failure;
+    let decoders = loop$decoders;
+    if (decoders.hasLength(0)) {
+      return failure;
+    } else {
+      let decoder = decoders.head;
+      let decoders$1 = decoders.tail;
+      let $ = decoder.function(data);
+      let layer = $;
+      let errors = $[1];
+      if (errors.hasLength(0)) {
+        return layer;
+      } else {
+        loop$data = data;
+        loop$failure = failure;
+        loop$decoders = decoders$1;
+      }
+    }
+  }
+}
+function one_of(first2, alternatives) {
+  return new Decoder(
+    (dynamic_data) => {
+      let $ = first2.function(dynamic_data);
+      let layer = $;
+      let errors = $[1];
+      if (errors.hasLength(0)) {
+        return layer;
+      } else {
+        return run_decoders(dynamic_data, layer, alternatives);
+      }
+    }
+  );
+}
 function run_dynamic_function(data, name, f) {
   let $ = f(data);
   if ($.isOk()) {
@@ -1260,14 +2582,120 @@ function decode_int2(data) {
   return run_dynamic_function(data, "Int", int);
 }
 var int2 = /* @__PURE__ */ new Decoder(decode_int2);
+function decode_string2(data) {
+  return run_dynamic_function(data, "String", string);
+}
+var string2 = /* @__PURE__ */ new Decoder(decode_string2);
+function push_path(layer, path) {
+  let decoder = one_of(
+    string2,
+    toList([
+      (() => {
+        let _pipe = int2;
+        return map5(_pipe, to_string);
+      })()
+    ])
+  );
+  let path$1 = map(
+    path,
+    (key2) => {
+      let key$1 = identity(key2);
+      let $ = run(key$1, decoder);
+      if ($.isOk()) {
+        let key$2 = $[0];
+        return key$2;
+      } else {
+        return "<" + classify_dynamic(key$1) + ">";
+      }
+    }
+  );
+  let errors = map(
+    layer[1],
+    (error) => {
+      let _record = error;
+      return new DecodeError2(
+        _record.expected,
+        _record.found,
+        append3(path$1, error.path)
+      );
+    }
+  );
+  return [layer[0], errors];
+}
+function index4(loop$path, loop$position, loop$inner, loop$data, loop$handle_miss) {
+  while (true) {
+    let path = loop$path;
+    let position = loop$position;
+    let inner = loop$inner;
+    let data = loop$data;
+    let handle_miss = loop$handle_miss;
+    if (path.hasLength(0)) {
+      let _pipe = inner(data);
+      return push_path(_pipe, reverse(position));
+    } else {
+      let key2 = path.head;
+      let path$1 = path.tail;
+      let $ = index3(data, key2);
+      if ($.isOk() && $[0] instanceof Some) {
+        let data$1 = $[0][0];
+        loop$path = path$1;
+        loop$position = prepend(key2, position);
+        loop$inner = inner;
+        loop$data = data$1;
+        loop$handle_miss = handle_miss;
+      } else if ($.isOk() && $[0] instanceof None) {
+        return handle_miss(data, prepend(key2, position));
+      } else {
+        let kind = $[0];
+        let $1 = inner(data);
+        let default$ = $1[0];
+        let _pipe = [
+          default$,
+          toList([new DecodeError2(kind, classify_dynamic(data), toList([]))])
+        ];
+        return push_path(_pipe, reverse(position));
+      }
+    }
+  }
+}
+function subfield(field_path, field_decoder, next) {
+  return new Decoder(
+    (data) => {
+      let $ = index4(
+        field_path,
+        toList([]),
+        field_decoder.function,
+        data,
+        (data2, position) => {
+          let $12 = field_decoder.function(data2);
+          let default$ = $12[0];
+          let _pipe = [
+            default$,
+            toList([new DecodeError2("Field", "Nothing", toList([]))])
+          ];
+          return push_path(_pipe, reverse(position));
+        }
+      );
+      let out = $[0];
+      let errors1 = $[1];
+      let $1 = next(out).function(data);
+      let out$1 = $1[0];
+      let errors2 = $1[1];
+      return [out$1, append3(errors1, errors2)];
+    }
+  );
+}
+function field(field_name, field_decoder, next) {
+  return subfield(toList([field_name]), field_decoder, next);
+}
 
 // build/dev/javascript/gleam_json/gleam_json_ffi.mjs
-function decode(string4) {
+function decode(string5) {
   try {
-    const result = JSON.parse(string4);
+    const result = JSON.parse(string5);
     return new Ok(result);
   } catch (err) {
-    return new Error(getJsonDecodeError(err, string4));
+    return new Error(getJsonDecodeError(err, string5));
   }
 }
 function getJsonDecodeError(stdErr, json) {
@@ -1332,12 +2760,12 @@ function jsCoreUnexpectedByteError(err) {
 function toHex(char) {
   return "0x" + char.charCodeAt(0).toString(16).toUpperCase();
 }
-function getPositionFromMultiline(line, column, string4) {
+function getPositionFromMultiline(line, column, string5) {
   if (line === 1)
     return column - 1;
   let currentLn = 1;
   let position = 0;
-  string4.split("").find((char, idx) => {
+  string5.split("").find((char, idx) => {
     if (char === "\n")
       currentLn += 1;
     if (currentLn === line) {
@@ -1378,17 +2806,8 @@ function do_parse(json, decoder) {
     }
   );
 }
-function parse(json, decoder) {
+function parse3(json, decoder) {
   return do_parse(json, decoder);
-}
-
-// build/dev/javascript/gleam_stdlib/gleam/bool.mjs
-function guard(requirement, consequence, alternative) {
-  if (requirement) {
-    return consequence;
-  } else {
-    return alternative();
-  }
 }
 
 // build/dev/javascript/lustre/lustre/effect.mjs
@@ -1398,6 +2817,20 @@ var Effect = class extends CustomType {
     this.all = all;
   }
 };
+function custom(run2) {
+  return new Effect(
+    toList([
+      (actions) => {
+        return run2(actions.dispatch, actions.emit, actions.select, actions.root);
+      }
+    ])
+  );
+}
+function from(effect) {
+  return custom((dispatch, _, _1, _2) => {
+    return effect(dispatch);
+  });
+}
 function none() {
   return new Effect(toList([]));
 }
@@ -1456,8 +2889,8 @@ function do_element_list_handlers(elements2, handlers2, key2) {
   return index_fold(
     elements2,
     handlers2,
-    (handlers3, element2, index4) => {
-      let key$1 = key2 + "-" + to_string(index4);
+    (handlers3, element2, index5) => {
+      let key$1 = key2 + "-" + to_string(index5);
       return do_handlers(element2, handlers3, key$1);
     }
   );
@@ -1503,11 +2936,17 @@ function handlers(element2) {
 function attribute(name, value2) {
   return new Attribute(name, identity(value2), false);
 }
+function property(name, value2) {
+  return new Attribute(name, identity(value2), true);
+}
 function on(name, handler) {
   return new Event2("on" + name, handler);
 }
 function class$(name) {
   return attribute("class", name);
+}
+function disabled(is_disabled) {
+  return property("disabled", is_disabled);
 }
 
 // build/dev/javascript/lustre/lustre/element.mjs
@@ -1867,8 +3306,8 @@ function lustreServerEventHandler(event2) {
   return {
     tag,
     data: include.reduce(
-      (data2, property) => {
-        const path = property.split(".");
+      (data2, property2) => {
+        const path = property2.split(".");
         for (let i = 0, o = data2, e = event2; i < path.length; i++) {
           if (i === path.length - 1) {
             o[path[i]] = e[path[i]];
@@ -2275,54 +3714,317 @@ function innerText(element2) {
   return element2.innerText;
 }
 
-// build/dev/javascript/client/client.mjs
-var Increment = class extends CustomType {
+// build/dev/javascript/rsvp/rsvp.ffi.mjs
+var from_relative_url = (url_string) => {
+  if (!globalThis.location)
+    return new Error(void 0);
+  const url = new URL(url_string, globalThis.location.href);
+  const uri = uri_from_url(url);
+  return new Ok(uri);
 };
-var Decrement = class extends CustomType {
+var uri_from_url = (url) => {
+  const optional = (value2) => value2 ? new Some(value2) : new None();
+  return new Uri(
+    /* scheme   */
+    optional(url.protocol?.slice(0, -1)),
+    /* userinfo */
+    new None(),
+    /* host     */
+    optional(url.hostname),
+    /* port     */
+    optional(url.port && Number(url.port)),
+    /* path     */
+    url.pathname,
+    /* query    */
+    optional(url.search?.slice(1)),
+    /* fragment */
+    optional(url.hash?.slice(1))
+  );
+};
+
+// build/dev/javascript/rsvp/rsvp.mjs
+var BadBody = class extends CustomType {
+};
+var BadUrl = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var HttpError = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var JsonError = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var NetworkError2 = class extends CustomType {
+};
+var UnhandledResponse = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+var Handler = class extends CustomType {
+  constructor(run2) {
+    super();
+    this.run = run2;
+  }
+};
+function expect_ok_response(handler) {
+  return new Handler(
+    (result) => {
+      return handler(
+        try$(
+          result,
+          (response) => {
+            let $ = response.status;
+            if ($ >= 200 && $ < 300) {
+              let code2 = $;
+              return new Ok(response);
+            } else if ($ >= 400 && $ < 600) {
+              let code2 = $;
+              return new Error(new HttpError(response));
+            } else {
+              return new Error(new UnhandledResponse(response));
+            }
+          }
+        )
+      );
+    }
+  );
+}
+function expect_json_response(handler) {
+  return expect_ok_response(
+    (result) => {
+      return handler(
+        try$(
+          result,
+          (response) => {
+            let $ = get_header(response, "content-type");
+            if ($.isOk() && $[0] === "application/json") {
+              return new Ok(response);
+            } else if ($.isOk() && $[0].startsWith("application/json;")) {
+              return new Ok(response);
+            } else {
+              return new Error(new UnhandledResponse(response));
+            }
+          }
+        )
+      );
+    }
+  );
+}
+function do_send(request, handler) {
+  return from(
+    (dispatch) => {
+      let _pipe = send(request);
+      let _pipe$1 = try_await(_pipe, read_text_body);
+      let _pipe$2 = map_promise(
+        _pipe$1,
+        (_capture) => {
+          return map_error(
+            _capture,
+            (error) => {
+              if (error instanceof NetworkError) {
+                return new NetworkError2();
+              } else if (error instanceof UnableToReadBody) {
+                return new BadBody();
+              } else {
+                return new BadBody();
+              }
+            }
+          );
+        }
+      );
+      let _pipe$3 = map_promise(_pipe$2, handler.run);
+      tap(_pipe$3, dispatch);
+      return void 0;
+    }
+  );
+}
+function send2(request, handler) {
+  return do_send(request, handler);
+}
+function reject(err, handler) {
+  return from(
+    (dispatch) => {
+      let _pipe = new Error(err);
+      let _pipe$1 = handler.run(_pipe);
+      return dispatch(_pipe$1);
+    }
+  );
+}
+function decode_json_body(response, decoder) {
+  let _pipe = response.body;
+  let _pipe$1 = parse3(_pipe, decoder);
+  return map_error(_pipe$1, (var0) => {
+    return new JsonError(var0);
+  });
+}
+function expect_json(decoder, handler) {
+  return expect_json_response(
+    (result) => {
+      let _pipe = result;
+      let _pipe$1 = then$(
+        _pipe,
+        (_capture) => {
+          return decode_json_body(_capture, decoder);
+        }
+      );
+      return handler(_pipe$1);
+    }
+  );
+}
+function to_uri2(uri_string) {
+  let _pipe = (() => {
+    if (uri_string.startsWith("./")) {
+      return from_relative_url(uri_string);
+    } else if (uri_string.startsWith("/")) {
+      return from_relative_url(uri_string);
+    } else {
+      return parse(uri_string);
+    }
+  })();
+  return replace_error(_pipe, new BadUrl(uri_string));
+}
+function get(url, handler) {
+  let $ = to_uri2(url);
+  if ($.isOk()) {
+    let uri = $[0];
+    let _pipe = from_uri(uri);
+    let _pipe$1 = map2(
+      _pipe,
+      (_capture) => {
+        return send2(_capture, handler);
+      }
+    );
+    let _pipe$2 = map_error(
+      _pipe$1,
+      (_) => {
+        return reject(new BadUrl(url), handler);
+      }
+    );
+    return unwrap_both(_pipe$2);
+  } else {
+    let err = $[0];
+    return reject(err, handler);
+  }
+}
+
+// build/dev/javascript/client/client.mjs
+var Model2 = class extends CustomType {
+  constructor(is_loading, quote) {
+    super();
+    this.is_loading = is_loading;
+    this.quote = quote;
+  }
+};
+var UserAskedQuote = class extends CustomType {
+};
+var QuoteLoaded = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
 };
 function read_initial_model() {
   let $ = (() => {
     let _pipe = querySelector("#model");
-    return map(_pipe, innerText);
+    return map2(_pipe, innerText);
   })();
   if ($.isOk()) {
     let json_string = $[0];
-    let _pipe = parse(json_string, int2);
-    return unwrap(_pipe, 0);
+    let _pipe = parse3(json_string, string2);
+    return unwrap2(_pipe, "");
   } else {
-    return 0;
+    return "";
   }
 }
 function init2(initial_model) {
-  return [initial_model, none()];
+  return [new Model2(false, initial_model), none()];
 }
-function update(model, msg) {
-  if (msg instanceof Increment) {
-    return [model + 1, none()];
-  } else {
-    return [model - 1, none()];
-  }
-}
-function button2(text3, on_click_msg) {
+function button2(attributes, elements2, on_click_msg) {
   return button(
-    toList([
+    prepend(
       on_click(on_click_msg),
-      class$(
-        "bg-red-600 text-white text-semibold rounded-lg hover:bg-blue-800 hover:cursor-pointer px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+      prepend(
+        class$(
+          "bg-red-600 text-white text-semibold rounded-lg hover:bg-red-800 hover:enabled:cursor-pointer px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:bg-gray-500"
+        ),
+        attributes
       )
-    ]),
-    toList([text2(text3)])
+    ),
+    elements2
   );
 }
 function view(model) {
   return div(
     toList([class$("flex flex-col gap-12")]),
     toList([
-      button2("Decrement", new Decrement()),
-      p(toList([]), toList([text2(to_string(model))])),
-      button2("Increment", new Increment())
+      button2(
+        (() => {
+          let $ = model.is_loading;
+          if (!$) {
+            return toList([]);
+          } else {
+            return toList([disabled(true)]);
+          }
+        })(),
+        (() => {
+          let $ = model.is_loading;
+          if (!$) {
+            return toList([text2("Fetch a new quote")]);
+          } else {
+            return toList([text2("Fetching\u2026")]);
+          }
+        })(),
+        new UserAskedQuote()
+      ),
+      p(toList([]), toList([text2(model.quote)]))
     ])
   );
+}
+function decode_quote() {
+  return field(
+    "content",
+    string2,
+    (quote) => {
+      return success(quote);
+    }
+  );
+}
+function get_quote() {
+  let url = "/api/quotes";
+  let handler = expect_json(
+    decode_quote(),
+    (var0) => {
+      return new QuoteLoaded(var0);
+    }
+  );
+  return get(url, handler);
+}
+function update(m, msg) {
+  if (msg instanceof UserAskedQuote) {
+    return [
+      (() => {
+        let _record = m;
+        return new Model2(true, _record.quote);
+      })(),
+      get_quote()
+    ];
+  } else if (msg instanceof QuoteLoaded && msg[0].isOk()) {
+    let quote = msg[0][0];
+    return [new Model2(false, quote), none()];
+  } else {
+    return [new Model2(false, "Error occured"), none()];
+  }
 }
 function main() {
   let initial_model = read_initial_model();
@@ -2332,7 +4034,7 @@ function main() {
     throw makeError(
       "let_assert",
       "client",
-      19,
+      23,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }
