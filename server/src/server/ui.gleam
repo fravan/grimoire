@@ -6,6 +6,7 @@ import lustre_hx
 import server/entity
 import server/htmx
 import server/parser
+import shared/entities
 
 pub fn layout(elements: List(Element(a))) {
   html.html([], [
@@ -17,7 +18,30 @@ pub fn layout(elements: List(Element(a))) {
       html.script([attribute.src("/vendors/htmx-v2-0-4.min.js")], ""),
       html.script([attribute.src("/assets/client.min.mjs")], ""),
     ]),
-    html.body([lustre_hx.boost(True)], elements),
+    html.body(
+      [lustre_hx.boost(True)],
+      list.flatten([
+        elements,
+        [
+          html.script(
+            [],
+            "const sse_livereload = new EventSource(\"sse_livereload\");
+          sse_livereload.onmessage = (e) => {
+            console.log(e);
+            location.reload();
+          };
+          sse_livereload.onclose = () => {
+            console.log(\"SSE closed\")
+          };
+          sse_livereload.onerror = (e) => {
+            console.log(\"SSE Errored: \", e)
+            sse_livereload.close();
+          };
+      ",
+          ),
+        ],
+      ]),
+    ),
   ])
 }
 
@@ -37,10 +61,12 @@ pub fn entity_link(
       lustre_hx.target(lustre_hx.CssSelector("#details")),
       attribute.id("entity_link_" <> entity.id),
       attribute.href("/" <> entity.id),
-      attribute.class("entity-link p-2 rounded hover:bg-gray-300"),
+      attribute.class(
+        entities.entity_link_class <> " p-2 rounded hover:bg-gray-300",
+      ),
       attribute.classes([
-        #("highlighted", highlight_state == Highlighted),
-        #("selected", highlight_state == Selected),
+        #(entities.entity_highlighted_class, highlight_state == Highlighted),
+        #(entities.entity_selected_class, highlight_state == Selected),
       ]),
     ]
       |> htmx.with_oob_swap(oob),

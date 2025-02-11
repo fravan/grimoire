@@ -17,6 +17,7 @@ target = "javascript"
 gleam_stdlib = ">= 0.44.0 and < 2.0.0"
 # plinth = ">= 0.5.6 and < 1.0.0"
 plinth = { path = "../../plinth" }
+shared = { path = "../shared" }
 gleam_javascript = ">= 0.13.0 and < 1.0.0"
 
 [dev-dependencies]

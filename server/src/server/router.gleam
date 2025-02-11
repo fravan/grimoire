@@ -3,13 +3,14 @@ import gleam/list
 import gleam/option
 import gleam/string
 import gleam/string_tree
+import lustre/attribute
+import lustre/element
+import lustre/element/html
 import server/entity
 import server/htmx
 import server/ui
 import server/web
-import lustre/attribute
-import lustre/element
-import lustre/element/html
+import shared/htmx_events
 import wisp.{type Request, type Response}
 
 pub fn handle_request(req: Request, ctx: web.Context) -> Response {
@@ -96,7 +97,7 @@ fn boosted_details(ctx: web.Context, id: String) -> Response {
       |> list.map(element.to_string_builder)
       |> string_tree.join("")
       |> wisp.html_response(200)
-      |> wisp.set_header("HX-Trigger", "clear-selection")
+      |> wisp.set_header("HX-Trigger", htmx_events.clear_selection)
     _ -> wisp.response(404)
   }
 }

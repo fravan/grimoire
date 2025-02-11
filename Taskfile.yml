@@ -4,7 +4,7 @@ tasks:
   tailwindcss:
     dir: server
     cmds:
-      - tailwindcss -i priv/static/assets/tailwind.css -o priv/static/assets/tailwind.min.css -w
+      - tailwindcss -i tailwind.css -o priv/static/assets/tailwind.min.css -w
   build-client:
     watch: true
     dir: client
@@ -15,6 +15,7 @@ tasks:
       - esbuild build/dev/javascript/client/client.mjs --bundle --minify --outfile=../server/priv/static/assets/client.min.mjs
     sources:
       - src/**/*.gleam
+      - ../shared/**/*.gleam
   server:
     dir: server
     cmds:

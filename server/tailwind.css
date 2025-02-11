@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@import "tailwindcss" source("./src");
+
+@source "../shared/src";
 
 @layer components {
     .entity-link {
