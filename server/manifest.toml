@@ -51,5 +51,6 @@ lustre_hx = { version = ">= 0.1.13 and < 1.0.0" }
 mist = { version = ">= 4.0.4 and < 5.0.0" }
 radiate = { version = ">= 0.4.0 and < 1.0.0" }
 shared = { path = "../shared" }
+shellout = { version = ">= 1.6.0 and < 2.0.0" }
 sqlight = { version = ">= 1.0.0 and < 2.0.0" }
 wisp = { version = ">= 1.5.1 and < 2.0.0" }

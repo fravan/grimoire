@@ -14,14 +14,10 @@ import wisp/wisp_mist
 const db_name = "grimoire.sqlite3"
 
 pub fn main() {
-  let _ =
-    radiate.new()
-    |> radiate.add_dir("src/server")
-    |> radiate.on_reload(fn(_, _) {
-      io.debug("Triggering clients")
-      Nil
-    })
-    |> radiate.start()
+  // let _ =
+  //   radiate.new()
+  //   |> radiate.add_dir("src/server")
+  //   |> radiate.start()
 
   wisp.configure_logger()
 

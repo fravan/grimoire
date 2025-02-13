@@ -64,6 +64,7 @@ pub fn entity_detail(entity: entity.Entity, all_entities: List(entity.Entity)) {
 
   html.div([attribute.class("entity-details")], [
     html.h1([], [html.text(entity.name)]),
+    // html.hr([]),
     ..parser.parse(final_description)
   ])
 }

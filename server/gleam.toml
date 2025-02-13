@@ -30,3 +30,4 @@ shared = { path = "../shared" }
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
 gleam_httpc = ">= 4.1.0 and < 5.0.0"
+shellout = ">= 1.6.0 and < 2.0.0"

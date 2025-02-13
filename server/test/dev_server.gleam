@@ -1,6 +1,8 @@
+import dev_server/live_reload
+import dev_server/watcher.{type WatchMsg}
 import gleam/bit_array
 import gleam/bytes_tree
-import gleam/erlang/process
+import gleam/erlang/process.{type Subject}
 import gleam/http/request.{type Request, Request}
 import gleam/http/response.{type Response}
 import gleam/httpc
@@ -11,7 +13,7 @@ import gleam/result
 import gleam/string
 import gleam/string_tree
 import mist
-import server/live_reload
+import shellout
 
 type SSEMessage {
   Reload
@@ -19,7 +21,10 @@ type SSEMessage {
 }
 
 pub fn main() {
+  let watch_subject = process.new_subject()
   let assert Ok(lr) = live_reload.start()
+
+  let assert Ok(_) = watcher.start(watch_subject)
 
   let assert Ok(_) =
     fn(req: Request(mist.Connection)) -> Response(mist.ResponseData) {
@@ -83,7 +88,33 @@ pub fn main() {
     |> mist.port(1234)
     |> mist.start_http
 
-  process.sleep_forever()
+  listen_to_watcher(watch_subject, lr)
+}
+
+fn listen_to_watcher(watch_subject: Subject(WatchMsg), live_reload) {
+  let msg = process.receive_forever(watch_subject)
+  case msg {
+    _ -> {
+      // The command never returns, `gleam run` is a long process
+      case
+        shellout.command(["run"], run: "gleam", in: ".", opt: [
+          shellout.LetBeStdout,
+        ])
+      {
+        Ok(output) -> {
+          io.debug("Triggering client after file changes and new build")
+          io.debug(output)
+          live_reload.trigger_clients(live_reload)
+          Nil
+        }
+        Error(_) -> {
+          io.debug("Something went wrong with gleam build")
+          Nil
+        }
+      }
+    }
+  }
+  listen_to_watcher(watch_subject, live_reload)
 }
 
 fn maybe_inject_sse(response: BitArray) {
