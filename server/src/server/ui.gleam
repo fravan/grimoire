@@ -18,30 +18,7 @@ pub fn layout(elements: List(Element(a))) {
       html.script([attribute.src("/vendors/htmx-v2-0-4.min.js")], ""),
       html.script([attribute.src("/assets/client.min.mjs")], ""),
     ]),
-    html.body(
-      [lustre_hx.boost(True)],
-      list.flatten([
-        elements,
-        [
-          html.script(
-            [],
-            "const sse_livereload = new EventSource(\"sse_livereload\");
-          sse_livereload.onmessage = (e) => {
-            console.log(e);
-            location.reload();
-          };
-          sse_livereload.onclose = () => {
-            console.log(\"SSE closed\")
-          };
-          sse_livereload.onerror = (e) => {
-            console.log(\"SSE Errored: \", e)
-            sse_livereload.close();
-          };
-      ",
-          ),
-        ],
-      ]),
-    ),
+    html.body([lustre_hx.boost(True)], elements),
   ])
 }
 
