@@ -1,7 +1,6 @@
 import gleam/dict
 import gleam/list
 import gleam/option
-import gleam/string
 import gleam/string_tree
 import lustre/attribute
 import lustre/element

@@ -1,10 +1,8 @@
 import envoy
 import gleam/erlang/process
 import gleam/int
-import gleam/io
 import gleam/result
 import mist
-import radiate
 import server/database
 import server/router
 import server/web
@@ -14,11 +12,6 @@ import wisp/wisp_mist
 const db_name = "grimoire.sqlite3"
 
 pub fn main() {
-  // let _ =
-  //   radiate.new()
-  //   |> radiate.add_dir("src/server")
-  //   |> radiate.start()
-
   wisp.configure_logger()
 
   let port = load_port()
