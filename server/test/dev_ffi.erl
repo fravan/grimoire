@@ -1,10 +1,6 @@
 -module(dev_ffi).
 
--export([identity/1, atomic_load/1]).
-
-% Used in coercion.
-identity(X) ->
-    X.
+-export([atomic_load/1]).
 
 atomic_load(Modules) ->
     case code:atomic_load(Modules) of
