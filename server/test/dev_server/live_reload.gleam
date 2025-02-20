@@ -1,11 +1,11 @@
 import dev_server/logging
 import gleam/erlang/process.{type Subject}
-import gleam/list
 import gleam/otp/actor
+import gleam/set.{type Set}
 
 pub fn start() {
   actor.start_spec(actor.Spec(
-    init: fn() { actor.Ready([], process.new_selector()) },
+    init: fn() { actor.Ready(set.new(), process.new_selector()) },
     init_timeout: 500,
     loop: loop_actor,
   ))
@@ -33,20 +33,19 @@ pub opaque type Message {
   TriggerClients
 }
 
-fn loop_actor(message: Message, state: List(Subject(ClientMessage))) {
+fn loop_actor(message: Message, state: Set(Subject(ClientMessage))) {
   case message {
     ClientConnected(client) -> {
       logging.log_debug("Client connected")
-      actor.continue([client, ..state])
+      actor.continue(set.insert(state, client))
     }
     ClientDisconnected(client) -> {
       logging.log_debug("Client disconnected")
-      actor.continue(state |> list.filter(fn(c) { c != client }))
+      actor.continue(set.delete(state, client))
     }
     TriggerClients -> {
       logging.log_debug("Triggering client to reload")
-      state
-      |> list.each(fn(client) { process.send(client, Reload) })
+      set.each(state, fn(client) { process.send(client, Reload) })
       actor.continue(state)
     }
   }

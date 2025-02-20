@@ -8,16 +8,15 @@ import gleam/erlang/process.{type Subject}
 import gleam/http/request.{type Request, Request}
 import gleam/http/response.{type Response}
 import gleam/httpc
-import gleam/option
+import gleam/io
+import gleam/option.{Some}
 import gleam/otp/actor
 import gleam/result
 import gleam/string
-import gleam/string_tree
 import mist
 
-type SSEMessage {
+type WSMessage {
   Reload
-  Down(process.ProcessDown)
 }
 
 pub fn main() {
@@ -29,41 +28,45 @@ pub fn main() {
   let assert Ok(_) =
     fn(req: Request(mist.Connection)) -> Response(mist.ResponseData) {
       case request.path_segments(req) {
-        ["sse_livereload"] -> {
-          mist.server_sent_events(
+        ["ws_livereload"] -> {
+          mist.websocket(
             request: req,
-            initial_response: response.new(200),
-            init: fn() {
+            on_init: fn(_connection) {
               let subj = process.new_subject()
-              let monitor = process.monitor_process(process.self())
               live_reload.register_client(lr, subj)
 
               let selector =
                 process.new_selector()
                 |> process.selecting(subj, fn(_msg) { Reload })
-                |> process.selecting_process_down(monitor, Down)
 
-              actor.Ready(subj, selector)
+              #(subj, Some(selector))
             },
-            loop: fn(message, conn, state) {
+            on_close: fn(state) { live_reload.unregister_client(lr, state) },
+            handler: fn(state, conn, message) {
               case message {
-                Reload -> {
-                  let event = mist.event(string_tree.from_string("reload"))
-                  case mist.send_event(conn, event) {
+                mist.Custom(Reload) -> {
+                  case mist.send_text_frame(conn, "reload") {
                     Ok(_) -> {
-                      logging.log_debug("Successfully sent SSE to client")
+                      logging.log_debug(
+                        "Successfully sent reload message to client",
+                      )
                       actor.continue(state)
                     }
                     Error(_) -> {
-                      logging.log_error("Could not send SSE to client")
+                      logging.log_error("Could not send message to client")
                       actor.Stop(process.Normal)
                     }
                   }
                 }
-                Down(_) -> {
+                mist.Closed | mist.Shutdown -> {
                   logging.log_debug("Client has disconnected")
                   live_reload.unregister_client(lr, state)
                   actor.Stop(process.Normal)
+                }
+                event -> {
+                  logging.log_debug("WS does not know what to do with event ")
+                  io.debug(event)
+                  actor.continue(state)
                 }
               }
             },
@@ -118,22 +121,25 @@ fn maybe_inject_sse(response: BitArray) {
 fn inject(html: String) -> String {
   let script =
     "<script>
-  const sse_livereload = new EventSource(\"sse_livereload\")
-  sse_livereload.onmessage = (e) => {
-    console.log(e)
-    location.reload()
-  }
-  sse_livereload.onclose = () => {
-    console.log(\"SSE closed\")
-  }
-  sse_livereload.onerror = (e) => {
-    console.log(\"SSE Errored: \")
-    console.log(e)
-    sse_livereload.close()
-  }
-  window.addEventListener('beforeunload', () => {
-    sse_livereload.close()
-  })
+    let liveReloadWebSocket = null;
+    let reconnectTimeout = null;
+
+    function connect() {
+      clearTimeout(reconnectTimeout);
+      liveReloadWebSocket = new WebSocket(`ws://${window.location.host}/ws_livereload`);
+
+      liveReloadWebSocket.onmessage = (event) => {
+        window.location.reload();
+      };
+      liveReloadWebSocket.onclose = reconnect;
+      liveReloadWebSocket.onerror = reconnect;
+    }
+
+    function reconnect() {
+      clearTimeout(reconnectTimeout);
+      reconnectTimeout = setTimeout(connect, 5000);
+    }
+    connect();
   </script>"
 
   html
