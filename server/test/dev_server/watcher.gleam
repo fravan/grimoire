@@ -12,39 +12,15 @@ fn fs_start_link(name: Atom, path: String) -> ErlangStartResult
 @external(erlang, "fs", "subscribe")
 fn fs_subscribe(name: Atom) -> Atom
 
-pub type WatchMsg {
-  Trigger
+pub type Message {
+  FilesChanged
 }
 
 type State {
-  State(debounce_timer: Option(Timer), watch_subject: Subject(WatchMsg))
+  State(debounce_timer: Option(Timer), watch_subject: Subject(Message))
 }
 
-fn do_loop(msg: Msg, state: State) {
-  case msg {
-    IgnoreChanges -> actor.continue(state)
-    TriggerRebuild -> {
-      case state.debounce_timer {
-        Some(timer) -> {
-          process.cancel_timer(timer)
-          Nil
-        }
-        None -> Nil
-      }
-      // Watcher sends multiple events for a same save,
-      // so we debounce it to avoid multiple builds in a very short time
-      let timer = process.send_after(state.watch_subject, 50, Trigger)
-      actor.continue(State(..state, debounce_timer: Some(timer)))
-    }
-  }
-}
-
-pub opaque type Msg {
-  TriggerRebuild
-  IgnoreChanges
-}
-
-pub fn start(watch_subject: Subject(WatchMsg)) {
+pub fn start(watch_subject: Subject(Message)) {
   actor.start_spec(
     actor.Spec(init_timeout: 5000, loop: do_loop, init: fn() {
       case watch_folder("src") {
@@ -53,6 +29,34 @@ pub fn start(watch_subject: Subject(WatchMsg)) {
       }
     }),
   )
+}
+
+fn do_loop(msg: InternalMsg, state: State) {
+  case msg {
+    IgnoreChanges -> actor.continue(state)
+    TriggerFilesChanged -> {
+      maybe_cancel_timer(state.debounce_timer)
+      // Watcher sends multiple events for a same save,
+      // so we debounce it to avoid multiple builds in a very short time
+      let timer = process.send_after(state.watch_subject, 50, FilesChanged)
+      actor.continue(State(..state, debounce_timer: Some(timer)))
+    }
+  }
+}
+
+pub opaque type InternalMsg {
+  TriggerFilesChanged
+  IgnoreChanges
+}
+
+fn maybe_cancel_timer(timer: Option(Timer)) {
+  case timer {
+    Some(timer) -> {
+      process.cancel_timer(timer)
+      Nil
+    }
+    None -> Nil
+  }
 }
 
 fn watch_folder(dir: String) {
@@ -80,7 +84,7 @@ fn watch_decoder(msg: decode.Dynamic) {
   case decode.run(msg, decoder) {
     Ok(events) ->
       case list.contains(events, EventNeedingRebuild) {
-        True -> TriggerRebuild
+        True -> TriggerFilesChanged
         False -> IgnoreChanges
       }
     Error(_) -> {

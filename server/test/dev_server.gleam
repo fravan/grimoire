@@ -1,10 +1,11 @@
 import dev_server/live_reload
 import dev_server/logging
 import dev_server/server_run
-import dev_server/watcher.{type WatchMsg}
+import dev_server/watcher
 import gleam/bit_array
 import gleam/bytes_tree
 import gleam/erlang/process.{type Subject}
+import gleam/function
 import gleam/http/request.{type Request, Request}
 import gleam/http/response.{type Response}
 import gleam/httpc
@@ -14,10 +15,6 @@ import gleam/otp/actor
 import gleam/result
 import gleam/string
 import mist
-
-type WSMessage {
-  Reload
-}
 
 pub fn main() {
   let watch_subject = process.new_subject()
@@ -37,14 +34,14 @@ pub fn main() {
 
               let selector =
                 process.new_selector()
-                |> process.selecting(subj, fn(_msg) { Reload })
+                |> process.selecting(subj, function.identity)
 
               #(subj, Some(selector))
             },
             on_close: fn(state) { live_reload.unregister_client(lr, state) },
             handler: fn(state, conn, message) {
               case message {
-                mist.Custom(Reload) -> {
+                mist.Custom(live_reload.Reload) -> {
                   case mist.send_text_frame(conn, "reload") {
                     Ok(_) -> {
                       logging.log_debug(
@@ -94,10 +91,10 @@ pub fn main() {
   listen_to_watcher(watch_subject, lr)
 }
 
-fn listen_to_watcher(watch_subject: Subject(WatchMsg), live_reload) {
+fn listen_to_watcher(watch_subject: Subject(watcher.Message), live_reload) {
   let msg = process.receive_forever(watch_subject)
   case msg {
-    watcher.Trigger -> {
+    watcher.FilesChanged -> {
       case server_run.reload_server_code() {
         Ok(_) -> {
           live_reload.trigger_clients(live_reload)

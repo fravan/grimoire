@@ -44,9 +44,14 @@ fn loop_actor(message: Message, state: Set(Subject(ClientMessage))) {
       actor.continue(set.delete(state, client))
     }
     TriggerClients -> {
-      logging.log_debug("Triggering client to reload")
-      set.each(state, fn(client) { process.send(client, Reload) })
-      actor.continue(state)
+      case set.is_empty(state) {
+        True -> actor.continue(state)
+        False -> {
+          logging.log_debug("Triggering clients to reload")
+          set.each(state, fn(client) { process.send(client, Reload) })
+          actor.continue(state)
+        }
+      }
     }
   }
 }
