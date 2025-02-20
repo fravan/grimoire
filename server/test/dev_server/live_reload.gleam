@@ -1,5 +1,5 @@
+import dev_server/logging
 import gleam/erlang/process.{type Subject}
-import gleam/io
 import gleam/list
 import gleam/otp/actor
 
@@ -20,8 +20,7 @@ pub fn unregister_client(live_reload_actor, client) {
 }
 
 pub fn trigger_clients(live_reload_actor) {
-  process.send_after(live_reload_actor, 200, TriggerClients)
-  // actor.send(live_reload_actor, TriggerClients)
+  actor.send(live_reload_actor, TriggerClients)
 }
 
 pub type ClientMessage {
@@ -37,15 +36,15 @@ pub opaque type Message {
 fn loop_actor(message: Message, state: List(Subject(ClientMessage))) {
   case message {
     ClientConnected(client) -> {
-      io.debug("[LR] Client connected")
+      logging.log_debug("Client connected")
       actor.continue([client, ..state])
     }
     ClientDisconnected(client) -> {
-      io.debug("[LR] Client disconnected")
+      logging.log_debug("Client disconnected")
       actor.continue(state |> list.filter(fn(c) { c != client }))
     }
     TriggerClients -> {
-      io.debug("[LR] Triggering clients")
+      logging.log_debug("Triggering client to reload")
       state
       |> list.each(fn(client) { process.send(client, Reload) })
       actor.continue(state)

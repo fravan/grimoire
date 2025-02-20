@@ -1,62 +1,43 @@
-import gleam/erlang/process.{type Subject}
-import gleam/io
-import gleam/option.{type Option, None, Some}
-import gleam/otp/actor
+import dev_server/logging
+import gleam/erlang/process
+import gleam/int
+import gleam/list
+import gleam/result
+import server
+import shellout
 
-pub type Message {
-  KillServer
-  RestartServer
-  SavePort(String)
-}
+// From gleam-radiate
+type Module
+
+type What
+
+@external(erlang, "code", "modified_modules")
+fn modified_modules() -> List(Module)
+
+@external(erlang, "code", "purge")
+fn purge(module: Module) -> Bool
+
+@external(erlang, "dev_ffi", "atomic_load")
+fn atomic_load(modules: List(Module)) -> Result(Nil, List(#(Module, What)))
 
 pub fn start_server() {
-  actor.start_spec(
-    actor.Spec(loop: loop_runs, init_timeout: 500, init: fn() {
-      let port = run_server()
-      actor.Ready(Some(port), process.new_selector())
-    }),
-  )
+  process.start(server.main, True)
 }
 
-pub fn restart(server: Subject(Message)) {
-  process.send(server, KillServer)
+pub fn reload_server_code() {
+  shellout.command(run: "gleam", with: ["build"], in: ".", opt: [])
+  |> result.map_error(fn(err) {
+    let #(status, msg) = err
+    "Error while building gleam project: "
+    <> int.to_string(status)
+    <> " - "
+    <> msg
+  })
+  |> result.try(fn(output) {
+    logging.log_debug("Output of `gleam build`: " <> output)
+    let mods = modified_modules()
+    list.each(mods, purge)
+    atomic_load(mods)
+    |> result.map_error(fn(_) { "Error while reloading Erlang modules" })
+  })
 }
-
-fn loop_runs(msg: Message, current_port: Option(String)) {
-  case msg {
-    KillServer -> {
-      case current_port {
-        Some(port) -> {
-          io.debug("[Server] closing port " <> port)
-          io.debug(stop_server(port))
-          actor.continue(None)
-        }
-        None -> actor.continue(None)
-      }
-    }
-    RestartServer -> {
-      io.debug("[Server] Some child process died, should start a new process?")
-      actor.continue(current_port)
-    }
-    SavePort(port) -> {
-      case current_port {
-        Some(p) if p != port -> {
-          io.debug(
-            "[Server] a new port is to be saved, but a previous one still exists",
-          )
-          io.debug("New: " <> port <> " // Old: " <> p)
-          stop_server(p)
-          Nil
-        }
-        _ -> Nil
-      }
-      actor.continue(Some(port))
-    }
-  }
-}
-
-@external(erlang, "dev_ffi", "run_server")
-fn run_server() -> String
-
-@external(erlang, "dev_ffi", "stop_server")
-fn stop_server(port: String) -> Bool

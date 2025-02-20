@@ -1,8 +1,8 @@
+import dev_server/logging
 import gleam/dynamic/decode
 import gleam/erlang/atom.{type Atom}
 import gleam/erlang/charlist
 import gleam/erlang/process.{type Subject, type Timer}
-import gleam/io
 import gleam/option.{type Option, None, Some}
 import gleam/otp/actor.{type ErlangStartResult}
 
@@ -23,8 +23,7 @@ type State {
 fn do_loop(msg: Msg, state: State) {
   case msg {
     Unknown -> actor.continue(state)
-    Updates(stuff) -> {
-      io.debug(stuff)
+    Updates(_) -> {
       case state.debounce_timer {
         Some(timer) -> {
           process.cancel_timer(timer)
@@ -32,7 +31,9 @@ fn do_loop(msg: Msg, state: State) {
         }
         None -> Nil
       }
-      let timer = process.send_after(state.watch_subject, 250, Trigger)
+      // Watcher sends multiple events for a same save,
+      // so we debounce it to avoid multiple builds in a very short time
+      let timer = process.send_after(state.watch_subject, 50, Trigger)
       actor.continue(State(..state, debounce_timer: Some(timer)))
     }
   }
@@ -112,17 +113,16 @@ pub fn start(watch_subject: Subject(WatchMsg)) {
               }
               case decode.run(msg, decoder) {
                 Ok(stuff) -> Updates(stuff)
-                Error(err) -> {
-                  io.debug(err)
+                Error(_) -> {
+                  logging.log_error("Error occured while watching files")
                   Unknown
                 }
               }
             })
           actor.Ready(State(None, watch_subject), selectors)
         }
-        Error(err) -> {
-          io.debug("An error happened while watching " <> server_dir)
-          io.debug(err)
+        Error(_) -> {
+          logging.log_error("Error occured while watching folder")
           actor.Failed("Err")
         }
       }

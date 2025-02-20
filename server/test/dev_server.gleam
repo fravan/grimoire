@@ -1,4 +1,5 @@
 import dev_server/live_reload
+import dev_server/logging
 import dev_server/server_run
 import dev_server/watcher.{type WatchMsg}
 import gleam/bit_array
@@ -7,7 +8,6 @@ import gleam/erlang/process.{type Subject}
 import gleam/http/request.{type Request, Request}
 import gleam/http/response.{type Response}
 import gleam/httpc
-import gleam/io
 import gleam/option
 import gleam/otp/actor
 import gleam/result
@@ -24,7 +24,7 @@ pub fn main() {
   let watch_subject = process.new_subject()
   let assert Ok(lr) = live_reload.start()
   let assert Ok(_) = watcher.start(watch_subject)
-  let assert Ok(server) = server_run.start_server()
+  let _ = server_run.start_server()
 
   let assert Ok(_) =
     fn(req: Request(mist.Connection)) -> Response(mist.ResponseData) {
@@ -51,17 +51,17 @@ pub fn main() {
                   let event = mist.event(string_tree.from_string("reload"))
                   case mist.send_event(conn, event) {
                     Ok(_) -> {
-                      io.debug("Successfully sent SSE to client")
+                      logging.log_debug("Successfully sent SSE to client")
                       actor.continue(state)
                     }
                     Error(_) -> {
-                      io.debug("Could not send SSE to client")
+                      logging.log_error("Could not send SSE to client")
                       actor.Stop(process.Normal)
                     }
                   }
                 }
                 Down(_) -> {
-                  io.debug("Client has disconnected")
+                  logging.log_debug("Client has disconnected")
                   live_reload.unregister_client(lr, state)
                   actor.Stop(process.Normal)
                 }
@@ -88,19 +88,24 @@ pub fn main() {
     |> mist.port(1234)
     |> mist.start_http
 
-  listen_to_watcher(watch_subject, lr, server)
+  listen_to_watcher(watch_subject, lr)
 }
 
-fn listen_to_watcher(watch_subject: Subject(WatchMsg), live_reload, server) {
+fn listen_to_watcher(watch_subject: Subject(WatchMsg), live_reload) {
   let msg = process.receive_forever(watch_subject)
   case msg {
-    _ -> {
-      server_run.restart(server)
-      io.debug("Triggering client after file changes and new build")
-      live_reload.trigger_clients(live_reload)
+    watcher.Trigger -> {
+      case server_run.reload_server_code() {
+        Ok(_) -> {
+          live_reload.trigger_clients(live_reload)
+        }
+        Error(msg) -> {
+          logging.log_error("Error while reloading server code : " <> msg)
+        }
+      }
     }
   }
-  listen_to_watcher(watch_subject, live_reload, server)
+  listen_to_watcher(watch_subject, live_reload)
 }
 
 fn maybe_inject_sse(response: BitArray) {
