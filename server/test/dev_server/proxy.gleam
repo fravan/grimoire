@@ -1,3 +1,8 @@
+//// The `proxy` module starts the proxy server that redirects to the "main" server
+//// It also injects a websocket connection and handles it, via the `client_registry`
+//// module, to add / remove them, and send them a websocket message to trigger the
+//// actual reload of the browser.
+
 import dev_server/client_registry.{type ClientRegistry}
 import dev_server/logging
 import gleam/bit_array

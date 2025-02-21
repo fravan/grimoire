@@ -1,3 +1,6 @@
+//// The `watcher` module watches a list of dir and triggers a `FilesChanged` message
+//// to be handled by calling code.
+
 import dev_server/logging
 import gleam/dynamic/decode
 import gleam/erlang/atom.{type Atom}
@@ -78,7 +81,7 @@ fn watch_folder(dir: String) {
 
 fn watch_decoder(msg: decode.Dynamic) {
   let decoder = {
-    use events <- decode.subfield([2, 1], decode.list(atom_to_string_decoder()))
+    use events <- decode.subfield([2, 1], decode.list(atom_to_watch_events()))
     decode.success(events)
   }
   case decode.run(msg, decoder) {
@@ -100,7 +103,7 @@ type WatchEvents {
 }
 
 /// Converts an atom to an event
-fn atom_to_string_decoder() {
+fn atom_to_watch_events() {
   // Only modified and renamed files are interesting
   // Reasoning:
   // - Modified code needs a reload, it's trivial

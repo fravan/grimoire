@@ -1,3 +1,7 @@
+//// the `server_run` module runs the "main" server and also handles the rebuilding
+//// of the main server code every time it is needed. Once a new build is generated
+//// it _hot_ replaces the updated modules.
+
 import dev_server/logging
 import gleam/erlang/process
 import gleam/int

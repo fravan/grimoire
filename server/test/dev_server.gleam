@@ -5,22 +5,28 @@ import dev_server/server_run
 import dev_server/watcher
 import gleam/erlang/process.{type Subject}
 
+/// Process is as follow:
+/// - Start a client registry
+/// - Start watcher, giving it a subject we will listen to.
+/// - Every time watcher sends us a message:
+///   - Reload server code
+///   - Send reload message to clients
 pub fn main() {
   let clients = client_registry.start()
-  let watch_subject = process.new_subject()
-  let assert Ok(_) = watcher.start(watch_subject)
+  let subject = process.new_subject()
+  let assert Ok(_) = watcher.start(subject)
   let _ = server_run.start_server()
 
   let assert Ok(_) = proxy.start_http(clients)
 
-  listen_to_watcher(watch_subject, clients)
+  listen_to_file_changes(subject, clients)
 }
 
-fn listen_to_watcher(
-  watch_subject: Subject(watcher.Message),
+fn listen_to_file_changes(
+  subject: Subject(watcher.Message),
   clients: ClientRegistry,
 ) {
-  let msg = process.receive_forever(watch_subject)
+  let msg = process.receive_forever(subject)
   case msg {
     watcher.FilesChanged -> {
       case server_run.reload_server_code() {
@@ -33,5 +39,5 @@ fn listen_to_watcher(
       }
     }
   }
-  listen_to_watcher(watch_subject, clients)
+  listen_to_file_changes(subject, clients)
 }
